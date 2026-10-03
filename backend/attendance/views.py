@@ -24,22 +24,51 @@ class CheckInView(views.APIView):
         event_id = serializer.validated_data.get('event_id')
         method = serializer.validated_data.get('method', 'QR')
 
+        from django.db.models import Q
+
+        # Extract search candidates from both fields
+        candidates = []
+        for raw in [qr_token, ticket_number]:
+            if raw:
+                v = raw.strip()
+                candidates.append(v)
+                # Without leading '#'
+                if v.startswith('#'):
+                    candidates.append(v.lstrip('#').strip())
+                # If wrapped in brackets or quotes
+                clean_v = v.strip('[]"\'# ')
+                if clean_v and clean_v not in candidates:
+                    candidates.append(clean_v)
+
         ticket = None
-        if qr_token:
-            ticket = Ticket.objects.filter(qr_token=qr_token).select_related('event', 'user').first()
-        elif ticket_number:
-            ticket = Ticket.objects.filter(ticket_number__iexact=ticket_number).select_related('event', 'user').first()
+        for cand in candidates:
+            # 1. Exact match on qr_token or ticket_number
+            ticket = Ticket.objects.filter(
+                Q(qr_token=cand) | Q(ticket_number__iexact=cand)
+            ).select_related('event', 'user').first()
+            if ticket:
+                break
+        
+        # 2. Fallback: Check if candidate is a substring of ticket_number or contains ticket_number
+        if not ticket:
+            for cand in candidates:
+                if len(cand) >= 5:
+                    ticket = Ticket.objects.filter(
+                        Q(ticket_number__icontains=cand) | Q(qr_token__icontains=cand)
+                    ).select_related('event', 'user').first()
+                    if ticket:
+                        break
 
         if not ticket:
             return error_response(
-                message="Invalid ticket or QR token. No matching ticket found.",
+                message=f"Invalid ticket code or QR pass. No matching ticket found for '{ticket_number or qr_token}'.",
                 code="TICKET_NOT_FOUND",
                 status_code=status.HTTP_404_NOT_FOUND
             )
 
         if event_id and ticket.event_id != int(event_id):
             return error_response(
-                message=f"This ticket is for '{ticket.event.title}', not the selected event.",
+                message=f"Ticket #{ticket.ticket_number} is for '{ticket.event.title}', not the active event desk.",
                 code="EVENT_MISMATCH"
             )
 

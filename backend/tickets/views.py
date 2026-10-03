@@ -22,15 +22,39 @@ from common.pdf_generator import generate_ticket_pdf
 
 logger = logging.getLogger(__name__)
 
+import base64
+import io
+import qrcode
+from email.mime.image import MIMEImage
+
 def send_ticket_confirmation_email(ticket):
-    """Sends rich HTML confirmation email with official PDF Ticket Pass attached."""
+    """Sends rich HTML confirmation email with embedded QR code image and official PDF Ticket Pass attached."""
     try:
         user = ticket.user
         event = ticket.event
+        
+        # 1. Generate QR Code Image (PNG bytes + Base64 for inline HTML display)
+        qr_data = ticket.qr_token or f"SKYVENT-TKT-{ticket.id}-{ticket.ticket_number}"
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_M,
+            box_size=6,
+            border=2,
+        )
+        qr.add_data(qr_data)
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill_color="#2A1E18", back_color="#FFFFFF")
+        
+        qr_buffer = io.BytesIO()
+        qr_img.save(qr_buffer, format='PNG')
+        qr_bytes = qr_buffer.getvalue()
+        qr_b64 = base64.b64encode(qr_bytes).decode('utf-8')
+        qr_buffer.close()
+
+        # 2. Generate PDF Ticket Pass bytes
         pdf_bytes = generate_ticket_pdf(ticket)
         
         subject = f"SKYVENT Pass & Ticket - {event.title} [#{ticket.ticket_number}]"
-        
         start_time_str = timezone.localtime(event.start_datetime).strftime('%A, %B %d, %Y at %I:%M %p')
         price_val = float(ticket.price)
         price_str = f"₹{price_val:.2f}" if price_val > 0 else "FREE PASS"
@@ -46,55 +70,100 @@ Event Details:
 - Ticket Number: #{ticket.ticket_number}
 - Pass Type: {ticket.ticket_type}
 - Amount: {price_str}
+- QR Verification Token: {qr_data}
 
-Please find your official Digital PDF Pass with entry QR code attached to this email.
+Please find your official Digital PDF Pass and Admission QR code attached to this email.
 
 See you there!
 SKYVENT Team"""
 
-        html_content = f"""<div style="font-family: Arial, sans-serif; color: #2A1E18; max-width: 560px; margin: 0 auto; border: 1px solid #E8DCCE; border-radius: 12px; padding: 24px; background-color: #FAF8F5;">
-  <div style="text-align: center; margin-bottom: 20px;">
-    <h2 style="color: #6B4A38; margin: 0;">SKYVENT Event Pass Confirmed</h2>
-    <p style="color: #7A6A5E; font-size: 13px; margin-top: 4px;">Official Campus Student Organization Platform</p>
+        html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SKYVENT Event Pass</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FAF8F5; color: #2A1E18;">
+  <div style="max-width: 580px; margin: 0 auto; background-color: #FFFFFF; border: 1px solid #E8DCCE; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 12px rgba(42, 30, 24, 0.05);">
+    
+    <!-- Top Header Banner -->
+    <div style="background-color: #6B4A38; padding: 22px 24px; text-align: center;">
+      <h1 style="color: #FFFFFF; margin: 0; font-size: 22px; letter-spacing: 1px; font-weight: 800;">SKYVENT</h1>
+      <p style="color: #FAF8F5; opacity: 0.9; margin: 4px 0 0 0; font-size: 13px; letter-spacing: 0.5px;">OFFICIAL CAMPUS EVENT PASS</p>
+    </div>
+
+    <!-- Main Content -->
+    <div style="padding: 24px;">
+      <p style="font-size: 15px; margin: 0 0 12px 0;">Hello <strong>{user.name}</strong>,</p>
+      <p style="font-size: 14px; color: #7A6A5E; margin: 0 0 20px 0; line-height: 1.5;">
+        Your registration for <strong>{event.title}</strong> is confirmed. Present the QR code below or the attached PDF ticket pass at the entry check-in gate.
+      </p>
+
+      <!-- Event Details Card -->
+      <div style="background-color: #FAF8F5; border: 1px solid #E8DCCE; border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+          <tr>
+            <td style="padding: 6px 0; color: #7A6A5E;">Event Title:</td>
+            <td style="padding: 6px 0; font-weight: bold; color: #2A1E18; text-align: right;">{event.title}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #7A6A5E;">Venue / Location:</td>
+            <td style="padding: 6px 0; font-weight: bold; color: #2A1E18; text-align: right;">{event.venue}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #7A6A5E;">Date & Time:</td>
+            <td style="padding: 6px 0; font-weight: bold; color: #6B4A38; text-align: right;">{start_time_str}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #7A6A5E;">Ticket Number:</td>
+            <td style="padding: 6px 0; font-family: monospace; font-weight: bold; color: #2A1E18; text-align: right;">#{ticket.ticket_number}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #7A6A5E;">Pass Type:</td>
+            <td style="padding: 6px 0; font-weight: bold; color: #2A1E18; text-align: right;">{ticket.ticket_type}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #7A6A5E;">Amount Paid:</td>
+            <td style="padding: 6px 0; font-weight: bold; color: #047857; text-align: right;">{price_str}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Prominent Visual QR Code Admission Pass -->
+      <div style="text-align: center; background-color: #FFFFFF; border: 2px dashed #6B4A38; border-radius: 12px; padding: 20px; margin: 20px 0;">
+        <p style="font-size: 13px; font-weight: 800; color: #6B4A38; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px;">
+          🎟️ Digital Gate Admission QR Pass
+        </p>
+        <div style="display: inline-block; padding: 10px; background-color: #FFFFFF; border: 1px solid #E8DCCE; border-radius: 8px;">
+          <img src="cid:ticket_admission_qr" alt="Entry Admission QR Pass" width="180" height="180" style="display: block; width: 180px; height: 180px; border: 0;" />
+        </div>
+        <p style="font-family: monospace; font-size: 11px; color: #7A6A5E; margin: 10px 0 0 0; word-break: break-all;">
+          Verification Code: #{ticket.ticket_number}
+        </p>
+      </div>
+
+      <!-- Attachment Guidance Note -->
+      <div style="background-color: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 12px; margin-top: 16px;">
+        <p style="font-size: 12px; color: #166534; margin: 0; line-height: 1.5;">
+          📎 <strong>Attachments Included:</strong><br>
+          1. <strong>Official PDF Ticket Pass</strong> (<code>SKYVENT_Pass_{ticket.ticket_number}.pdf</code>) — Print or save on your phone.<br>
+          2. <strong>Admission QR Image</strong> (<code>SKYVENT_QR_{ticket.ticket_number}.png</code>) — Scan instantly at the entrance desk.
+        </p>
+      </div>
+
+      <p style="font-size: 13px; color: #7A6A5E; margin-top: 24px;">
+        See you at the event!<br>
+        <strong style="color: #6B4A38;">SKYVENT Campus Team</strong>
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div style="background-color: #FAF8F5; border-top: 1px solid #E8DCCE; padding: 12px; text-align: center; font-size: 11px; color: #7A6A5E;">
+      Skyline Student Association • One Campus. One Community. One Platform.
+    </div>
   </div>
-  <p>Hello <strong>{user.name}</strong>,</p>
-  <p>Your ticket for <strong>{event.title}</strong> is confirmed. Your digital PDF pass with your admission QR code is attached to this email.</p>
-  
-  <div style="background-color: #FFFFFF; border: 1px solid #E8DCCE; border-radius: 8px; padding: 16px; margin: 16px 0;">
-    <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
-      <tr>
-        <td style="padding: 6px 0; color: #7A6A5E;">Event:</td>
-        <td style="padding: 6px 0; font-weight: bold; text-align: right;">{event.title}</td>
-      </tr>
-      <tr>
-        <td style="padding: 6px 0; color: #7A6A5E;">Venue:</td>
-        <td style="padding: 6px 0; font-weight: bold; text-align: right;">{event.venue}</td>
-      </tr>
-      <tr>
-        <td style="padding: 6px 0; color: #7A6A5E;">Date & Time:</td>
-        <td style="padding: 6px 0; font-weight: bold; color: #6B4A38; text-align: right;">{start_time_str}</td>
-      </tr>
-      <tr>
-        <td style="padding: 6px 0; color: #7A6A5E;">Ticket Number:</td>
-        <td style="padding: 6px 0; font-family: monospace; font-weight: bold; text-align: right;">#{ticket.ticket_number}</td>
-      </tr>
-      <tr>
-        <td style="padding: 6px 0; color: #7A6A5E;">Pass Type:</td>
-        <td style="padding: 6px 0; font-weight: bold; text-align: right;">{ticket.ticket_type}</td>
-      </tr>
-      <tr>
-        <td style="padding: 6px 0; color: #7A6A5E;">Amount Paid:</td>
-        <td style="padding: 6px 0; font-weight: bold; text-align: right;">{price_str}</td>
-      </tr>
-    </table>
-  </div>
-  
-  <p style="font-size: 12px; color: #7A6A5E; line-height: 1.5;">
-    📎 <strong>PDF Pass Attached:</strong> You can download or print the attached PDF ticket, or present the live QR code from your SKYVENT Member Dashboard on your smartphone at the event entrance.
-  </p>
-  
-  <p style="font-size: 13px; margin-top: 24px;">Best regards,<br><strong>SKYVENT Team</strong></p>
-</div>"""
+</body>
+</html>"""
 
         email = EmailMultiAlternatives(
             subject=subject,
@@ -103,11 +172,21 @@ SKYVENT Team"""
             to=[user.email]
         )
         email.attach_alternative(html_content, "text/html")
-        email.attach(f"SKYVENT_Ticket_{ticket.ticket_number}.pdf", pdf_bytes, "application/pdf")
+        
+        # 1. Attach inline CID QR image for direct visual rendering in all email clients
+        qr_mime = MIMEImage(qr_bytes)
+        qr_mime.add_header('Content-ID', '<ticket_admission_qr>')
+        qr_mime.add_header('Content-Disposition', 'inline', filename=f"SKYVENT_QR_{ticket.ticket_number}.png")
+        email.attach(qr_mime)
+
+        # 2. Attach downloadable PDF Pass
+        if pdf_bytes:
+            email.attach(f"SKYVENT_Pass_{ticket.ticket_number}.pdf", pdf_bytes, "application/pdf")
+        
         email.send(fail_silently=False)
-        logger.info(f"Ticket PDF confirmation sent to {user.email} for ticket #{ticket.ticket_number}")
+        logger.info(f"Ticket PDF & QR confirmation email successfully sent to {user.email} for ticket #{ticket.ticket_number}")
     except Exception as e:
-        logger.error(f"Failed to send ticket email: {e}")
+        logger.error(f"Failed to send ticket email: {e}", exc_info=True)
 
 User = get_user_model()
 

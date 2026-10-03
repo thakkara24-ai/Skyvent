@@ -112,21 +112,36 @@ export const AdminAttendancePage = () => {
   const startCamera = async () => {
     setCameraError(null);
     try {
+      // Clear any prior stream / intervals first
+      if (scanIntervalRef.current) {
+        clearInterval(scanIntervalRef.current);
+        scanIntervalRef.current = null;
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
       });
       streamRef.current = stream;
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.setAttribute('playsinline', 'true');
-        videoRef.current.play();
+        try {
+          await videoRef.current.play();
+        } catch (e) {
+          console.log('Video autoplay exception:', e);
+        }
       }
       setIsCameraActive(true);
 
       // Start continuous scanning loop
       scanIntervalRef.current = setInterval(() => {
         scanVideoFrame();
-      }, 250);
+      }, 200);
     } catch (err) {
       console.warn('Camera access denied or unavailable:', err);
       setCameraError('Camera access not available or permission denied. You can use Image Upload or Manual Entry.');
@@ -175,7 +190,7 @@ export const AdminAttendancePage = () => {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const code = jsQR(imageData.data, imageData.width, imageData.height, {
-      inversionAttempts: 'dontInvert',
+      inversionAttempts: 'attemptBoth',
     });
 
     if (code && code.data && code.data !== lastScannedCodeRef.current) {
@@ -189,7 +204,7 @@ export const AdminAttendancePage = () => {
   };
 
   // --------------------------------------------------------------------------
-  // QR Image File Upload Decoding
+  // QR Image File Upload Decoding (Multi-Scale Robust Detector)
   // --------------------------------------------------------------------------
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
@@ -199,32 +214,57 @@ export const AdminAttendancePage = () => {
     reader.onload = (event) => {
       const img = new Image();
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, img.width, img.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        // Multi-pass attempt: 1) Original scale, 2) Downscaled 800px max, 3) 500px scale
+        const tryDecode = (width, height) => {
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return null;
+          ctx.drawImage(img, 0, 0, width, height);
+          const imgData = ctx.getImageData(0, 0, width, height);
+          return jsQR(imgData.data, width, height, { inversionAttempts: 'attemptBoth' });
+        };
+
+        // Pass 1: Direct scale
+        let code = tryDecode(img.width, img.height);
+
+        // Pass 2: Downscale for high-res mobile photos (e.g. 3000px wide)
+        if (!code && (img.width > 800 || img.height > 800)) {
+          const maxDim = 800;
+          const scale = Math.min(maxDim / img.width, maxDim / img.height);
+          const scaledW = Math.round(img.width * scale);
+          const scaledH = Math.round(img.height * scale);
+          code = tryDecode(scaledW, scaledH);
+        }
+
+        // Pass 3: Intermediate 1200px scale
+        if (!code && (img.width > 1200 || img.height > 1200)) {
+          const maxDim = 1200;
+          const scale = Math.min(maxDim / img.width, maxDim / img.height);
+          code = tryDecode(Math.round(img.width * scale), Math.round(img.height * scale));
+        }
+
         if (code && code.data) {
-          toast.info(`QR Detected: ${code.data.substring(0, 20)}...`);
+          toast.info(`QR Pass Decoded: ${code.data.substring(0, 24)}...`);
           handlePerformCheckIn(code.data, 'QR');
         } else {
-          toast.error('No readable QR code found in this image. Please upload a clear ticket pass.');
+          toast.error('No readable QR pass found in this image. Please upload a clear photo or screenshot of your ticket pass.');
         }
       };
       img.src = event.target?.result;
     };
     reader.readAsDataURL(file);
+    // Reset file input so re-uploading same file triggers event
+    e.target.value = '';
   };
 
   // --------------------------------------------------------------------------
   // Check-In Execution Flow
   // --------------------------------------------------------------------------
   const handlePerformCheckIn = async (inputCode, method = 'MANUAL') => {
-    const code = (inputCode || ticketInput).trim();
-    if (!code) {
+    const rawCode = (inputCode || ticketInput).trim();
+    if (!rawCode) {
       toast.error('Please enter a ticket number or scan a QR code.');
       return;
     }
@@ -232,11 +272,15 @@ export const AdminAttendancePage = () => {
     setIsProcessing(true);
     setCheckInResult(null);
 
-    const isQr = code.startsWith('SKY_QR_');
+    // Clean leading hash / spaces for ticket numbers
+    const cleanCode = rawCode.replace(/^[#\s]+/, '');
+    const isQrToken = rawCode.startsWith('SKY_QR_') || rawCode.startsWith('SKYVENT-TKT-') || rawCode.length > 25;
+
     const payload = {
       event_id: selectedEventId ? parseInt(selectedEventId) : undefined,
-      method: isQr ? 'QR' : method,
-      ...(isQr ? { qr_token: code } : { ticket_number: code })
+      method: isQrToken ? 'QR' : method,
+      qr_token: rawCode,
+      ticket_number: cleanCode
     };
 
     try {
@@ -376,14 +420,16 @@ export const AdminAttendancePage = () => {
             {activeTab === 'camera' && (
               <div className="space-y-3 text-center">
                 <div className="relative w-full h-64 bg-black rounded-xl overflow-hidden flex items-center justify-center border border-[#E8DCCE]">
+                  <video
+                    ref={videoRef}
+                    className={`w-full h-full object-cover ${isCameraActive ? 'block' : 'hidden'}`}
+                    playsInline
+                    muted
+                    autoPlay
+                  />
+
                   {isCameraActive ? (
                     <>
-                      <video
-                        ref={videoRef}
-                        className="w-full h-full object-cover"
-                        playsInline
-                        muted
-                      />
                       {/* Viewfinder Target Box Overlay */}
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="w-44 h-44 border-2 border-emerald-400 rounded-lg relative">
@@ -401,10 +447,10 @@ export const AdminAttendancePage = () => {
                   ) : (
                     <div className="p-6 text-white space-y-2">
                       <CameraOff className="w-10 h-10 mx-auto text-[#E8DCCE]/60" />
-                      <p className="text-xs text-[#E8DCCE]">Camera is currently inactive or denied.</p>
+                      <p className="text-xs text-[#E8DCCE]">Camera is currently turned off.</p>
                       {cameraError && <p className="text-[11px] text-rose-300">{cameraError}</p>}
-                      <Button size="sm" variant="outline" onClick={startCamera} className="bg-white/10 text-white border-white/20">
-                        Retry Camera
+                      <Button size="sm" variant="outline" onClick={startCamera} className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+                        Turn On Camera
                       </Button>
                     </div>
                   )}
