@@ -1,1 +1,0 @@
-# Skyvent config package
