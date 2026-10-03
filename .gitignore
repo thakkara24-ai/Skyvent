@@ -1,22 +1,32 @@
-# Python
-backend/venv/
-backend/__pycache__/
-backend/*/__pycache__/
-backend/*/*/__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-backend/db.sqlite3
-backend/db.sqlite3-journal
-backend/media/
-backend/static/staticfiles/
-*.log
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
 
-# Node
-frontend/node_modules/
-frontend/dist/
-frontend/.env
-backend/.env
+# C extensions
+*.so
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# Environment files
+.env
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE / OS specific
+.idea/
+.vscode/
+*.swp
+*.swo
 .DS_Store
 Thumbs.db

@@ -43,16 +43,8 @@ INSTALLED_APPS = [
     'common.apps.CommonConfig',
     'accounts.apps.AccountsConfig',
     'memberships.apps.MembershipsConfig',
-    'events.apps.EventsConfig',
-    'tickets.apps.TicketsConfig',
-    'attendance.apps.AttendanceConfig',
-    'merchandise.apps.MerchandiseConfig',
-    'orders.apps.OrdersConfig',
-    'announcements.apps.AnnouncementsConfig',
-    'fundraisers.apps.FundraisersConfig',
     'finance.apps.FinanceConfig',
     'notifications.apps.NotificationsConfig',
-    'dashboard.apps.DashboardConfig',
 ]
 
 MIDDLEWARE = [

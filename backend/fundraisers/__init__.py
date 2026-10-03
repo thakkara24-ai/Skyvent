@@ -1,1 +1,0 @@
-# Fundraisers package
