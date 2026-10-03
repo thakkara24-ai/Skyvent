@@ -1,0 +1,35 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="orbitG" x1="50" y1="360" x2="440" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8B6353" />
+      <stop offset="50%" stop-color="#6B4A38" />
+      <stop offset="100%" stop-color="#43281C" />
+    </linearGradient>
+    <linearGradient id="topG" x1="120" y1="80" x2="380" y2="280" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#A07260" />
+      <stop offset="50%" stop-color="#6B4A38" />
+      <stop offset="100%" stop-color="#2A1E18" />
+    </linearGradient>
+    <linearGradient id="botG" x1="120" y1="260" x2="420" y2="460" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6B4A38" />
+      <stop offset="60%" stop-color="#563B2C" />
+      <stop offset="100%" stop-color="#2A1E18" />
+    </linearGradient>
+    <linearGradient id="arrowG" x1="360" y1="180" x2="480" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8B6353" />
+      <stop offset="50%" stop-color="#6B4A38" />
+      <stop offset="100%" stop-color="#3E2419" />
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="248" fill="#FAF8F5" stroke="#E8DCCE" stroke-width="8"/>
+  <path d="M 90 330 C 70 300, 110 240, 200 190 C 270 150, 360 110, 410 80" stroke="url(#orbitG)" stroke-width="22" stroke-linecap="round" fill="none" opacity="0.85" />
+  <path d="M 180 290 C 230 340, 300 380, 360 380 C 410 380, 410 320, 360 280 C 310 230, 240 200, 170 160 C 120 130, 110 70, 180 70 C 250 70, 320 110, 350 160" stroke="url(#botG)" stroke-width="58" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  <path d="M 350 150 C 330 100, 260 70, 180 70 C 120 70, 100 120, 140 170 C 180 210, 250 240, 320 280 C 390 320, 400 390, 340 430 C 280 470, 190 440, 140 380" stroke="url(#topG)" stroke-width="54" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  <path d="M 100 320 C 140 360, 240 330, 330 250 C 370 200, 410 140, 440 90" stroke="url(#orbitG)" stroke-width="24" stroke-linecap="round" fill="none" />
+  <g transform="translate(365, 55) rotate(-15)">
+    <polygon points="75,0 0,65 35,45" fill="url(#arrowG)" />
+    <polygon points="75,0 35,45 25,85" fill="#2A1E18" />
+    <polygon points="75,0 25,85 50,45" fill="#6B4A38" />
+    <polygon points="75,0 50,45 85,55" fill="#8B6353" />
+  </g>
+</svg>
