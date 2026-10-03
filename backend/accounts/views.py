@@ -47,12 +47,25 @@ class RegisterView(views.APIView):
         # Generate & Send Email OTP
         otp_raw = OTPVerification.generate_otp(user.email, purpose='REGISTER')
         
+        otp_html = f"""<h2>SKYVENT Login OTP</h2>
+
+<p>Your one-time login code is:</p>
+
+<h1>{otp_raw}</h1>
+
+<p>This code is valid for a limited time.</p>
+
+<p>If you did not request this code, you can ignore this email.</p>"""
+
+        otp_text = f"""SKYVENT Login OTP\n\nYour one-time login code is: {otp_raw}\n\nThis code is valid for a limited time.\n\nIf you did not request this code, you can ignore this email."""
+
         try:
             send_mail(
                 subject="SKYVENT - Verify Your Account",
-                message=f"Hello {user.name},\n\nYour SKYVENT verification code is: {otp_raw}\n\nThis code will expire in 5 minutes. Do not share it with anyone.\n\nBest regards,\nSKYVENT Platform Team",
+                message=otp_text,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
+                html_message=otp_html,
                 fail_silently=False
             )
         except Exception as e:
@@ -101,14 +114,27 @@ class SendOTPView(views.APIView):
             'VERIFY_EMAIL': "SKYVENT - Verify Your Email",
             'FORGOT_PASSWORD': "SKYVENT - Password Reset Code",
         }
-        subject = subject_map.get(purpose, "SKYVENT Verification Code")
+        subject = subject_map.get(purpose, "SKYVENT Login OTP")
+
+        otp_html = f"""<h2>SKYVENT Login OTP</h2>
+
+<p>Your one-time login code is:</p>
+
+<h1>{otp_raw}</h1>
+
+<p>This code is valid for a limited time.</p>
+
+<p>If you did not request this code, you can ignore this email.</p>"""
+
+        otp_text = f"""SKYVENT Login OTP\n\nYour one-time login code is: {otp_raw}\n\nThis code is valid for a limited time.\n\nIf you did not request this code, you can ignore this email."""
 
         try:
             send_mail(
                 subject=subject,
-                message=f"Your SKYVENT verification code is: {otp_raw}\n\nThis code expires in 5 minutes.\n\nIf you did not request this, please disregard this email.",
+                message=otp_text,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],
+                html_message=otp_html,
                 fail_silently=False
             )
         except Exception as e:
@@ -118,6 +144,7 @@ class SendOTPView(views.APIView):
             data={"email": email, "purpose": purpose},
             message="Verification code sent to your email."
         )
+
 
 
 class VerifyOTPView(views.APIView):
