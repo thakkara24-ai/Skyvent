@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fundraiserService, authService } from '../../services/api';
+import { fundraiserService, authService, extractDataArray } from '../../services/api';
 import { KanbanSquare, Plus, CheckCircle2, Clock, AlertTriangle, ArrowRight, User, Filter } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -35,15 +35,13 @@ export const AdminTasksPage = () => {
         fundraiserService.getFundraisers(),
         authService.getUsers()
       ]);
-      if (tRes.data) setTasks(tRes.data.results || tRes.data);
-      if (fRes.data) {
-        const fList = fRes.data.results || fRes.data;
-        setFundraisers(fList);
-        if (fList.length > 0 && !newTaskData.fundraiser) {
-          setNewTaskData(prev => ({ ...prev, fundraiser: String(fList[0].id) }));
-        }
+      setTasks(extractDataArray(tRes));
+      const fList = extractDataArray(fRes);
+      setFundraisers(fList);
+      if (fList.length > 0 && !newTaskData.fundraiser) {
+        setNewTaskData(prev => ({ ...prev, fundraiser: String(fList[0].id) }));
       }
-      if (uRes.data) setUsers(uRes.data.results || uRes.data);
+      setUsers(extractDataArray(uRes));
     } catch {
       toast.error('Failed to load tasks board.');
     } finally {
@@ -319,6 +317,7 @@ export const AdminTasksPage = () => {
           <Input
             label="Due Date"
             type="date"
+            min={new Date().toISOString().slice(0, 10)}
             value={newTaskData.due_date}
             onChange={(e) => setNewTaskData({ ...newTaskData, due_date: e.target.value })}
             required

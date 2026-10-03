@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { productService } from '../../services/api';
+import { productService, extractDataArray } from '../../services/api';
 import { useSocket } from '../../context/SocketContext';
 import { 
   ShoppingBag, 
@@ -79,7 +79,7 @@ export const AdminProductsPage = () => {
   const fetchProducts = async () => {
     try {
       const res = await productService.getProducts();
-      if (res.data) setProducts(res.data.results || res.data);
+      setProducts(extractDataArray(res));
     } catch {
       toast.error('Failed to load products.');
     } finally {

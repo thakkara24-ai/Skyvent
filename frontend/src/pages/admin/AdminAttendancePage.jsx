@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { eventService, attendanceService } from '../../services/api';
+import { eventService, attendanceService, extractDataArray } from '../../services/api';
 import { useSocket } from '../../context/SocketContext';
 import { 
   QrCode, 
@@ -55,12 +55,11 @@ export const AdminAttendancePage = () => {
   const fetchEvents = async () => {
     try {
       const res = await eventService.getEvents();
-      if (res.data) {
-        setEvents(res.data);
-        if (res.data.length > 0 && !selectedEventId) {
-          setSelectedEventId(String(res.data[0].id));
-          setSelectedEvent(res.data[0]);
-        }
+      const list = extractDataArray(res);
+      setEvents(list);
+      if (list.length > 0 && !selectedEventId) {
+        setSelectedEventId(String(list[0].id));
+        setSelectedEvent(list[0]);
       }
     } catch {
       toast.error('Failed to load events list.');
@@ -73,7 +72,7 @@ export const AdminAttendancePage = () => {
     if (!eventId) return;
     try {
       const res = await attendanceService.getEventAttendance(eventId);
-      if (res.data) setAttendances(res.data.results || res.data);
+      setAttendances(extractDataArray(res));
     } catch {
       // ignore
     }

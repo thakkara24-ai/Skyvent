@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fundraiserService } from '../../services/api';
+import { fundraiserService, extractDataArray } from '../../services/api';
 import { HeartHandshake, Plus, Edit2, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -26,7 +26,7 @@ export const AdminFundraisersPage = () => {
   const fetchFundraisers = async () => {
     try {
       const res = await fundraiserService.getFundraisers();
-      if (res.data) setFundraisers(res.data.results || res.data);
+      setFundraisers(extractDataArray(res));
     } catch {
       toast.error('Failed to load campaigns.');
     } finally {
@@ -171,6 +171,7 @@ export const AdminFundraisersPage = () => {
             <Input
               label="Start Date"
               type="date"
+              min={new Date().toISOString().slice(0, 10)}
               value={formData.start_date}
               onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
               required
@@ -178,6 +179,7 @@ export const AdminFundraisersPage = () => {
             <Input
               label="End Date"
               type="date"
+              min={formData.start_date || new Date().toISOString().slice(0, 10)}
               value={formData.end_date}
               onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
               required

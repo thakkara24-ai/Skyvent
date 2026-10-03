@@ -139,25 +139,34 @@ export const AdminEventFormPage = () => {
             />
           </div>
 
+          {/* Event Schedule (No Past Dates Allowed) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Start Date & Time"
+              label="Start Date & Time *"
               type="datetime-local"
+              min={new Date().toISOString().slice(0, 16)}
               error={errors.start_datetime?.message}
-              {...register('start_datetime', { required: 'Start time is required' })}
+              {...register('start_datetime', { 
+                required: 'Start time is required',
+                validate: (val) => isEdit || new Date(val) >= new Date() || 'Event start time cannot be in the past'
+              })}
             />
 
             <Input
-              label="End Date & Time"
+              label="End Date & Time *"
               type="datetime-local"
+              min={new Date().toISOString().slice(0, 16)}
               error={errors.end_datetime?.message}
-              {...register('end_datetime', { required: 'End time is required' })}
+              {...register('end_datetime', { 
+                required: 'End time is required',
+                validate: (val) => isEdit || new Date(val) >= new Date() || 'Event end time cannot be in the past'
+              })}
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Input
-              label="Capacity (Seats)"
+              label="Capacity (Seats) *"
               type="number"
               placeholder="100"
               error={errors.capacity?.message}
@@ -165,7 +174,7 @@ export const AdminEventFormPage = () => {
             />
 
             <Input
-              label="Member Price (₹)"
+              label="Member Price (₹) *"
               type="number"
               placeholder="300"
               error={errors.member_price?.message}
@@ -173,7 +182,7 @@ export const AdminEventFormPage = () => {
             />
 
             <Input
-              label="Non-Member Price (₹)"
+              label="Non-Member Price (₹) *"
               type="number"
               placeholder="500"
               error={errors.non_member_price?.message}
@@ -183,19 +192,25 @@ export const AdminEventFormPage = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Registration Open"
+              label="Registration Open *"
               type="datetime-local"
+              min={new Date().toISOString().slice(0, 16)}
               error={errors.registration_open?.message}
               {...register('registration_open', { required: 'Registration open is required' })}
             />
 
             <Input
-              label="Registration Close"
+              label="Registration Close *"
               type="datetime-local"
+              min={new Date().toISOString().slice(0, 16)}
               error={errors.registration_close?.message}
-              {...register('registration_close', { required: 'Registration close is required' })}
+              {...register('registration_close', { 
+                required: 'Registration close is required',
+                validate: (val) => isEdit || new Date(val) >= new Date() || 'Registration close cannot be in the past'
+              })}
             />
           </div>
+
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>

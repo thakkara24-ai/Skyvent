@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ticketService, eventService, authService } from '../../services/api';
+import { ticketService, eventService, authService, extractDataArray } from '../../services/api';
 import { useSocket } from '../../context/SocketContext';
 import { Ticket as TicketIcon, Search, QrCode, Filter, Plus, User, Calendar, CheckCircle2, DollarSign } from 'lucide-react';
 import { Card } from '../../components/common/Card';
@@ -41,7 +41,7 @@ export const AdminTicketsPage = () => {
         search,
         status: statusFilter || undefined,
       });
-      if (res.data) setTickets(res.data.results || res.data);
+      setTickets(extractDataArray(res));
     } catch {
       toast.error('Failed to load tickets.');
     } finally {
@@ -55,8 +55,8 @@ export const AdminTicketsPage = () => {
         eventService.getEvents(),
         authService.getUsers(),
       ]);
-      if (evtsRes.data) setEvents(evtsRes.data.results || evtsRes.data);
-      if (usersRes.data) setUsers(usersRes.data.results || usersRes.data);
+      setEvents(extractDataArray(evtsRes));
+      setUsers(extractDataArray(usersRes));
     } catch {
       // ignore
     }

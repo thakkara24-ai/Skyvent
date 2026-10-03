@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { orderService } from '../../services/api';
+import { orderService, extractDataArray } from '../../services/api';
 import { ShoppingBag, Package, Clock, CheckCircle2, MapPin } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
@@ -14,7 +14,7 @@ export const MyOrdersPage = () => {
   const fetchOrders = async () => {
     try {
       const res = await orderService.getOrders();
-      if (res.data) setOrders(res.data);
+      setOrders(extractDataArray(res));
     } catch (err) {
       toast.error('Could not load orders.');
     } finally {

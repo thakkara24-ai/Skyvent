@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { financeService } from '../../services/api';
+import { financeService, extractDataArray } from '../../services/api';
 import { useSocket } from '../../context/SocketContext';
 import { 
   Wallet, 
@@ -58,8 +58,8 @@ export const AdminFinancePage = () => {
         financeService.getExpenses()
       ]);
       if (sRes.data) setSummary(sRes.data);
-      if (tRes.data) setTransactions(tRes.data.results || tRes.data);
-      if (eRes.data) setExpenses(eRes.data.results || eRes.data);
+      setTransactions(extractDataArray(tRes));
+      setExpenses(extractDataArray(eRes));
     } catch {
       toast.error('Failed to load finance ledger.');
     } finally {

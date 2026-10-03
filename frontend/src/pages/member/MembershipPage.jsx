@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { membershipService } from '../../services/api';
+import { membershipService, extractDataArray } from '../../services/api';
 import { CreditCard, CheckCircle2, Sparkles, ShieldCheck, ArrowRight, Zap } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -21,7 +21,7 @@ export const MembershipPage = () => {
   const fetchPlans = async () => {
     try {
       const res = await membershipService.getPlans();
-      if (res.data) setPlans(res.data);
+      setPlans(extractDataArray(res));
     } catch (err) {
       toast.error('Could not load membership plans.');
     } finally {

@@ -21,12 +21,30 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Helper to safely extract arrays from various response shapes
+export const extractDataArray = (res) => {
+  if (!res) return [];
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res.data)) return res.data;
+  if (Array.isArray(res.results)) return res.results;
+  if (Array.isArray(res.data?.results)) return res.data.results;
+  if (Array.isArray(res.data?.data)) return res.data.data;
+  return [];
+};
+
 // Response Interceptor: unwrap responses & handle token refresh
 api.interceptors.response.use(
   (response) => {
-    // If backend returns { success: true, data: ... }, extract data or response directly
-    return response.data;
+    const res = response.data;
+    // Normalize paginated response shapes
+    if (res && typeof res === 'object') {
+      if (res.results !== undefined && res.data === undefined) {
+        res.data = res.results;
+      }
+    }
+    return res;
   },
+
   async (error) => {
     const originalRequest = error.config;
     

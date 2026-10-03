@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ticketService } from '../../services/api';
+import { ticketService, extractDataArray } from '../../services/api';
 import { Ticket as TicketIcon, QrCode, Calendar, MapPin, Clock, XCircle, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -24,7 +24,7 @@ export const MyTicketsPage = () => {
   const fetchTickets = async () => {
     try {
       const res = await ticketService.getTickets({ status: statusFilter !== 'ALL' ? statusFilter : undefined });
-      if (res.data) setTickets(res.data);
+      setTickets(extractDataArray(res));
     } catch (err) {
       toast.error('Could not load your tickets.');
     } finally {

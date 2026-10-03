@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { authService } from '../../services/api';
+import { authService, extractDataArray } from '../../services/api';
 import { Users, Search, Filter, Shield, Edit2, CheckCircle2 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -21,13 +21,15 @@ export const AdminMembersPage = () => {
   const fetchUsers = async () => {
     try {
       const res = await authService.getUsers({ search, role: roleFilter || undefined });
-      if (res.data) setUsers(res.data.results || res.data);
+      const items = extractDataArray(res);
+      setUsers(items);
     } catch {
       toast.error('Failed to load members.');
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     const t = setTimeout(() => {

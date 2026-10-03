@@ -14,8 +14,10 @@ export const PublicLayout = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Events', path: '/events' },
+    { name: 'Merchandise', path: '/merchandise' },
     { name: 'About', path: '/about' },
   ];
+
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#2A1E18]">

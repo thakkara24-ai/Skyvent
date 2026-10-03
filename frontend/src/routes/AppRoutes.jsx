@@ -12,6 +12,7 @@ import { LandingPage } from '../pages/public/LandingPage';
 import { EventsPage } from '../pages/public/EventsPage';
 import { EventDetailPage } from '../pages/public/EventDetailPage';
 import { AboutPage } from '../pages/public/AboutPage';
+import { MerchandiseShopPage } from '../pages/public/MerchandiseShopPage';
 
 // Auth Pages
 import { LoginPage } from '../pages/auth/LoginPage';
@@ -67,6 +68,8 @@ export const AppRoutes = () => {
         <Route path="/" element={<LandingPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/events/:id" element={<EventDetailPage />} />
+        <Route path="/merchandise" element={<MerchandiseShopPage />} />
+        <Route path="/shop" element={<MerchandiseShopPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -78,11 +81,13 @@ export const AppRoutes = () => {
       <Route element={<ProtectedRoute><MemberLayout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<MemberDashboardPage />} />
         <Route path="/membership" element={<MembershipPage />} />
+        <Route path="/store" element={<MerchandiseShopPage />} />
         <Route path="/my-tickets" element={<MyTicketsPage />} />
         <Route path="/my-orders" element={<MyOrdersPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Route>
+
 
       {/* Admin / Staff Protected Pages */}
       <Route path="/admin" element={<StaffRoute><AdminLayout /></StaffRoute>}>

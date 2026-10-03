@@ -9,7 +9,9 @@ import {
   CreditCard, 
   Ticket, 
   ShoppingBag, 
+  Package,
   Bell, 
+
   User as UserIcon, 
   LogOut, 
   ShieldAlert,
@@ -53,9 +55,11 @@ export const MemberLayout = () => {
     { name: 'Dashboard', path: '/dashboard', icon: Home },
     { name: 'Events', path: '/events', icon: Calendar },
     { name: 'Membership', path: '/membership', icon: CreditCard },
+    { name: 'Store', path: '/store', icon: ShoppingBag },
     { name: 'My Tickets', path: '/my-tickets', icon: Ticket },
-    { name: 'My Orders', path: '/my-orders', icon: ShoppingBag },
+    { name: 'My Orders', path: '/my-orders', icon: Package },
   ];
+
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#2A1E18]">

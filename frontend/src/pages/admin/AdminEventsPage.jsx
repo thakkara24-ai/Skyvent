@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { eventService } from '../../services/api';
+import { eventService, extractDataArray } from '../../services/api';
 import { Calendar, Plus, Edit2, Trash2, Users, MapPin, Clock, Eye } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -21,7 +21,7 @@ export const AdminEventsPage = () => {
   const fetchEvents = async () => {
     try {
       const res = await eventService.getEvents();
-      if (res.data) setEvents(res.data);
+      setEvents(extractDataArray(res));
     } catch {
       toast.error('Failed to load events.');
     } finally {

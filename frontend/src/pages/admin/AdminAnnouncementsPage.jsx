@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { announcementService } from '../../services/api';
+import { announcementService, extractDataArray } from '../../services/api';
 import { Megaphone, Plus, Edit2, Trash2 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -27,7 +27,7 @@ export const AdminAnnouncementsPage = () => {
   const fetchAnnouncements = async () => {
     try {
       const res = await announcementService.getAnnouncements();
-      if (res.data) setAnnouncements(res.data.results || res.data);
+      setAnnouncements(extractDataArray(res));
     } catch {
       toast.error('Failed to load announcements.');
     } finally {

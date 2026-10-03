@@ -35,7 +35,7 @@ export const MemberDashboardPage = () => {
   const fetchDashboard = async () => {
     try {
       const res = await dashboardService.getMemberDashboard();
-      if (res.data) setData(res.data);
+      if (res) setData(res.data || res);
     } catch (err) {
       console.error('Failed to load member dashboard:', err);
     } finally {

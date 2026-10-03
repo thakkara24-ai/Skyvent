@@ -125,19 +125,68 @@ class MembershipViewSet(viewsets.ModelViewSet):
             notification_type='MEMBERSHIP'
         )
 
-        # Dispath Confirmation Email
+        # Dispatch Confirmation Email with Expiry Date and Details
+        expiry_formatted = end_date.strftime('%B %d, %Y')
+        email_text = f"""Hi {user.name},
+
+Congratulations! Your {plan.name} membership has been activated successfully.
+
+Membership Details:
+- Plan: {plan.name}
+- Valid Until (Expiry Date): {expiry_formatted}
+- Amount Paid: ₹{plan.price}
+- Payment Reference: {payment.reference}
+
+Thank you for being a vital part of our campus community!
+
+Best regards,
+SKYVENT Team"""
+
+        email_html = f"""<div style="font-family: Arial, sans-serif; color: #2A1E18; max-width: 540px; margin: 0 auto; border: 1px solid #E8DCCE; border-radius: 12px; padding: 24px; background-color: #FAF8F5;">
+  <div style="text-align: center; margin-bottom: 20px;">
+    <h2 style="color: #6B4A38; margin: 0;">SKYVENT Membership Activated</h2>
+    <p style="color: #7A6A5E; font-size: 13px; margin-top: 4px;">Official Student Organization Platform</p>
+  </div>
+  <p>Hi <strong>{user.name}</strong>,</p>
+  <p>Congratulations! Your <strong>{plan.name}</strong> membership is now active.</p>
+  <div style="background-color: #FFFFFF; border: 1px solid #E8DCCE; border-radius: 8px; padding: 16px; margin: 16px 0;">
+    <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+      <tr>
+        <td style="padding: 6px 0; color: #7A6A5E;">Plan:</td>
+        <td style="padding: 6px 0; font-weight: bold; text-align: right;">{plan.name}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #7A6A5E;">Valid Until (Expiry Date):</td>
+        <td style="padding: 6px 0; font-weight: bold; color: #6B4A38; text-align: right;">{expiry_formatted}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #7A6A5E;">Amount Paid:</td>
+        <td style="padding: 6px 0; font-weight: bold; text-align: right;">₹{plan.price}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #7A6A5E;">Reference ID:</td>
+        <td style="padding: 6px 0; font-mono; text-align: right;">{payment.reference}</td>
+      </tr>
+    </table>
+  </div>
+  <p style="font-size: 13px; color: #7A6A5E;">You now have instant access to member-exclusive event pricing, priority ticketing, and student organization privileges.</p>
+  <p style="font-size: 13px; margin-top: 20px;">Best regards,<br><strong>SKYVENT Team</strong></p>
+</div>"""
+
         try:
             send_mail(
                 subject="SKYVENT - Membership Confirmation",
-                message=f"Hi {user.name},\n\nCongratulations! Your {plan.name} membership is active until {end_date.strftime('%B %d, %Y')}.\n\nAmount Paid: ₹{plan.price}\nPayment Reference: {payment.reference}\n\nThank you for supporting the campus community!\n\nSKYVENT Team",
+                message=email_text,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
+                html_message=email_html,
                 fail_silently=False
             )
         except Exception as e:
             pass
 
         create_audit_log(user, "MEMBERSHIP_PURCHASED", "Membership", membership.id, {
+
             "plan": plan.name,
             "amount": str(plan.price)
         })

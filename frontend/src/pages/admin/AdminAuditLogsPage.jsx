@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardService } from '../../services/api';
+import { dashboardService, extractDataArray } from '../../services/api';
 import { ScrollText, Search, ShieldAlert } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
@@ -14,7 +14,7 @@ export const AdminAuditLogsPage = () => {
   const fetchLogs = async () => {
     try {
       const res = await dashboardService.getAuditLogs();
-      if (res.data) setLogs(res.data);
+      setLogs(extractDataArray(res));
     } catch {
       toast.error('Failed to load audit logs.');
     } finally {

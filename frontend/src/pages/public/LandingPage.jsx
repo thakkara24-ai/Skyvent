@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { eventService, productService, membershipService } from '../../services/api';
+import { eventService, productService, membershipService, extractDataArray } from '../../services/api';
 import { 
   Calendar, 
   CreditCard, 
@@ -40,9 +40,9 @@ export const LandingPage = () => {
           productService.getProducts(),
           membershipService.getPlans()
         ]);
-        if (evtsRes.data) setEvents(evtsRes.data.slice(0, 3));
-        if (prodsRes.data) setProducts(prodsRes.data.slice(0, 3));
-        if (plansRes.data) setPlans(plansRes.data);
+        setEvents(extractDataArray(evtsRes).slice(0, 3));
+        setProducts(extractDataArray(prodsRes).slice(0, 3));
+        setPlans(extractDataArray(plansRes));
       } catch (err) {
         console.error('Failed to load landing data:', err);
       } finally {

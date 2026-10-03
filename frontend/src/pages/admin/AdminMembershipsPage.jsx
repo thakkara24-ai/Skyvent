@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { membershipService } from '../../services/api';
+import { membershipService, extractDataArray } from '../../services/api';
 import { CreditCard, Plus, Edit2, Users, CheckCircle2 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -32,8 +32,8 @@ export const AdminMembershipsPage = () => {
         membershipService.getPlans(),
         membershipService.getMemberships()
       ]);
-      if (pRes.data) setPlans(pRes.data);
-      if (mRes.data) setMemberships(mRes.data.results || mRes.data);
+      setPlans(extractDataArray(pRes));
+      setMemberships(extractDataArray(mRes));
     } catch {
       toast.error('Failed to load memberships.');
     } finally {
