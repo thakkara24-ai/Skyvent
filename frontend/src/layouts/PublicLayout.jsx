@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { Calendar, Compass, Shield, ShoppingBag, LogIn, UserPlus, Sparkles } from 'lucide-react';
 import { Button } from '../components/common/Button';
 
+import { SkyventLogo } from '../components/common/Logo';
+
 export const PublicLayout = () => {
   const { user, isAuthenticated, logout, isStaff } = useAuth();
   const navigate = useNavigate();
@@ -17,27 +19,14 @@ export const PublicLayout = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#2A1E18]">
-      {/* Top Banner Tagline */}
-      <div className="bg-[#2A1E18] text-[#E8DCCE] text-xs py-1.5 px-4 text-center font-medium tracking-wide flex items-center justify-center gap-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-        "One Campus. One Community. One Platform."
-      </div>
-
       {/* Main Navbar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E8DCCE]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-[#6B4A38] flex items-center justify-center text-[#FAF8F5] font-black tracking-tight text-lg shadow-xs group-hover:bg-[#2A1E18] transition-colors">
-              S
-            </div>
-            <div>
-              <span className="text-xl font-bold tracking-tight text-[#2A1E18]">SKYVENT</span>
-              <span className="block text-[10px] font-medium tracking-widest text-[#7A6A5E] uppercase -mt-1">
-                Student Org Hub
-              </span>
-            </div>
+            <SkyventLogo size={36} withText={true} />
           </Link>
+
 
           {/* Navigation links */}
           <nav className="hidden md:flex items-center gap-6">
@@ -115,13 +104,9 @@ export const PublicLayout = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-[#7A6A5E]/30">
             {/* Brand column */}
             <div className="md:col-span-2 space-y-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#FAF8F5] flex items-center justify-center text-[#2A1E18] font-black">
-                  S
-                </div>
-                <span className="text-xl font-bold tracking-tight text-white">SKYVENT</span>
-              </div>
+              <SkyventLogo size={32} withText={true} light={true} />
               <p className="text-xs text-[#E8DCCE]/80 leading-relaxed max-w-sm">
+
                 The comprehensive student organization management platform. Unifying memberships, events, ticketing, digital check-in, merchandise, and financial reporting.
               </p>
               <div className="text-xs text-[#8B6353] font-medium pt-1">

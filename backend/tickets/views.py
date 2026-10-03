@@ -1,3 +1,5 @@
+from decimal import Decimal
+from django.contrib.auth import get_user_model
 from rest_framework import viewsets, views, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -15,9 +17,127 @@ from notifications.models import Notification
 from common.responses import success_response, error_response
 from common.utils import create_audit_log, broadcast_ws_event
 
-class TicketViewSet(viewsets.ReadOnlyModelViewSet):
+User = get_user_model()
+
+class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
     permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        # Allow Staff/Admin to issue a ticket
+        if not (request.user.role in ['SUPER_ADMIN', 'PRESIDENT', 'TREASURER', 'VOLUNTEER'] or request.user.is_superuser):
+            return error_response(
+                message="Only administrators and event coordinators can issue tickets.",
+                code="FORBIDDEN",
+                status_code=status.HTTP_403_FORBIDDEN
+            )
+
+        event_id = request.data.get('event_id')
+        user_id = request.data.get('user_id')
+        user_email = request.data.get('user_email')
+        ticket_type = request.data.get('ticket_type', 'REGULAR')
+        custom_price = request.data.get('price')
+
+        if not event_id:
+            return error_response(message="Event ID is required.")
+
+        event = get_object_or_404(Event, id=event_id)
+
+        # Resolve target attendee user
+        target_user = None
+        if user_id:
+            target_user = User.objects.filter(id=user_id).first()
+        elif user_email:
+            target_user = User.objects.filter(email=user_email).first()
+
+        if not target_user:
+            target_user = request.user
+
+        # Check existing active ticket
+        existing_ticket = Ticket.objects.filter(
+            event=event,
+            user=target_user,
+            status__in=['PENDING', 'CONFIRMED']
+        ).first()
+
+        if existing_ticket:
+            return error_response(
+                message=f"Attendee {target_user.name} already holds an active ticket for this event (#{existing_ticket.ticket_number}).",
+                code="DUPLICATE_TICKET"
+            )
+
+        # Determine price
+        if custom_price is not None and str(custom_price).strip() != '':
+            price = Decimal(str(custom_price))
+        else:
+            price = event.member_price if (target_user.has_active_membership or ticket_type == 'MEMBER') else event.non_member_price
+
+        # Unique token & ticket number
+        qr_token = f"SKY_QR_{event.id}_{uuid.uuid4().hex[:16]}"
+        ticket_count = Ticket.objects.filter(event=event).count() + 1
+        ticket_number = f"SKY-EVT-{timezone.now().year}-{event.id:04d}-{ticket_count:03d}"
+
+        # Create payment record
+        payment = Payment.objects.create(
+            user=target_user,
+            amount=price,
+            provider='DEMO_PAYMENT',
+            reference=f"PAY-ADM-{uuid.uuid4().hex[:8].upper()}",
+            status='SUCCESS'
+        )
+
+        ticket = Ticket.objects.create(
+            ticket_number=ticket_number,
+            event=event,
+            user=target_user,
+            ticket_type=ticket_type,
+            price=price,
+            payment=payment,
+            qr_token=qr_token,
+            status='CONFIRMED'
+        )
+
+        # Financial ledger entry
+        if price > 0:
+            Transaction.objects.create(
+                transaction_type='INCOME',
+                category='EVENT_TICKET',
+                amount=price,
+                description=f"Admin Issued Ticket: {ticket.ticket_number} for {event.title} to {target_user.name}",
+                reference_type='EVENT_TICKET',
+                reference_id=str(ticket.id),
+                created_by=request.user
+            )
+
+        # Notify Attendee
+        Notification.objects.create(
+            user=target_user,
+            title="Event Ticket Issued",
+            message=f"A ticket (#{ticket.ticket_number}) for '{event.title}' has been issued to your account.",
+            notification_type='TICKET'
+        )
+
+        create_audit_log(request.user, "TICKET_ISSUED_ADMIN", "Ticket", ticket.id, {
+            "ticket_number": ticket.ticket_number,
+            "event": event.title,
+            "attendee": target_user.name,
+            "price": str(price)
+        })
+
+        broadcast_ws_event("ticket_purchased", {
+            "ticket_id": ticket.id,
+            "ticket_number": ticket.ticket_number,
+            "event_id": event.id,
+            "event_title": event.title,
+            "attendee_name": target_user.name
+        })
+
+        return success_response(
+            data=TicketSerializer(ticket).data,
+            message=f"Ticket #{ticket.ticket_number} successfully issued for {target_user.name}.",
+            status_code=status.HTTP_201_CREATED
+        )
+
 
     def get_queryset(self):
         user = self.request.user

@@ -1,21 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { ticketService } from '../../services/api';
-import { Ticket as TicketIcon, Search, QrCode, Filter } from 'lucide-react';
+import { ticketService, eventService, authService } from '../../services/api';
+import { useSocket } from '../../context/SocketContext';
+import { Ticket as TicketIcon, Search, QrCode, Filter, Plus, User, Calendar, CheckCircle2, DollarSign } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
+import { Input } from '../../components/common/Input';
 import { Badge } from '../../components/common/Badge';
+import { Modal } from '../../components/common/Modal';
 import { Skeleton } from '../../components/common/UiHelpers';
 import { QRModal } from '../../components/common/QRModal';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 export const AdminTicketsPage = () => {
+  const { subscribe } = useSocket();
+
   const [tickets, setTickets] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [qrModalOpen, setQrModalOpen] = useState(false);
+
+  // Issue Ticket Modal
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    event_id: '',
+    user_id: '',
+    user_email: '',
+    ticket_type: 'REGULAR',
+    price: '',
+  });
 
   const fetchTickets = async () => {
     try {
@@ -31,12 +49,90 @@ export const AdminTicketsPage = () => {
     }
   };
 
+  const fetchEventsAndUsers = async () => {
+    try {
+      const [evtsRes, usersRes] = await Promise.all([
+        eventService.getEvents(),
+        authService.getUsers(),
+      ]);
+      if (evtsRes.data) setEvents(evtsRes.data.results || evtsRes.data);
+      if (usersRes.data) setUsers(usersRes.data.results || usersRes.data);
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     const t = setTimeout(() => {
       fetchTickets();
     }, 250);
     return () => clearTimeout(t);
   }, [search, statusFilter]);
+
+  useEffect(() => {
+    fetchEventsAndUsers();
+    const unsub = subscribe('ticket_purchased', () => {
+      fetchTickets();
+    });
+    return unsub;
+  }, [subscribe]);
+
+  const handleOpenCreateModal = () => {
+    setFormData({
+      event_id: events.length > 0 ? String(events[0].id) : '',
+      user_id: users.length > 0 ? String(users[0].id) : '',
+      user_email: '',
+      ticket_type: 'REGULAR',
+      price: events.length > 0 ? String(events[0].non_member_price) : '0',
+    });
+    setCreateModalOpen(true);
+  };
+
+  const handleEventChange = (eventId) => {
+    const evt = events.find((e) => String(e.id) === String(eventId));
+    setFormData((prev) => ({
+      ...prev,
+      event_id: eventId,
+      price: evt ? (prev.ticket_type === 'MEMBER' ? String(evt.member_price) : String(evt.non_member_price)) : prev.price
+    }));
+  };
+
+  const handleTicketTypeChange = (type) => {
+    const evt = events.find((e) => String(e.id) === String(formData.event_id));
+    setFormData((prev) => ({
+      ...prev,
+      ticket_type: type,
+      price: evt ? (type === 'MEMBER' ? String(evt.member_price) : String(evt.non_member_price)) : prev.price
+    }));
+  };
+
+  const handleCreateTicket = async (e) => {
+    e.preventDefault();
+    if (!formData.event_id) {
+      toast.error('Please select an event.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        event_id: parseInt(formData.event_id),
+        user_id: formData.user_id ? parseInt(formData.user_id) : undefined,
+        user_email: formData.user_email || undefined,
+        ticket_type: formData.ticket_type,
+        price: formData.price,
+      };
+
+      const res = await ticketService.createTicket(payload);
+      toast.success(res.message || 'Ticket issued successfully!');
+      setCreateModalOpen(false);
+      fetchTickets();
+    } catch (err) {
+      toast.error(err.message || 'Failed to issue ticket.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleOpenQR = (t) => {
     setSelectedTicket(t);
@@ -45,13 +141,25 @@ export const AdminTicketsPage = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#2A1E18] tracking-tight">
-          Issued Tickets & Passes
-        </h1>
-        <p className="text-xs sm:text-sm text-[#7A6A5E] mt-1">
-          Master registry of all attendee passes, check-in statuses, and QR verification codes
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#2A1E18] tracking-tight">
+            Issued Tickets & Passes
+          </h1>
+          <p className="text-xs sm:text-sm text-[#7A6A5E] mt-1">
+            Master registry of attendee tickets, complimentary passes, and QR verification tokens
+          </p>
+        </div>
+
+        <Button
+          size="sm"
+          variant="primary"
+          icon={Plus}
+          onClick={handleOpenCreateModal}
+          className="font-bold"
+        >
+          Issue New Ticket
+        </Button>
       </div>
 
       {/* Filter & Search */}
@@ -140,7 +248,7 @@ export const AdminTicketsPage = () => {
                         icon={QrCode}
                         onClick={() => handleOpenQR(t)}
                       >
-                        Pass
+                        View QR
                       </Button>
                     </td>
                   </tr>
@@ -151,12 +259,113 @@ export const AdminTicketsPage = () => {
         )}
       </Card>
 
-      {/* QR Modal */}
-      <QRModal
-        isOpen={qrModalOpen}
-        onClose={() => setQrModalOpen(false)}
-        ticket={selectedTicket}
-      />
+      {/* Issue Ticket Modal */}
+      <Modal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        title="Issue Event Ticket / Pass"
+        subtitle="Manually grant or register an attendee ticket with QR code"
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleCreateTicket} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-[#2A1E18] uppercase tracking-wider mb-1">
+              Select Campus Event *
+            </label>
+            <select
+              value={formData.event_id}
+              onChange={(e) => handleEventChange(e.target.value)}
+              className="w-full bg-white border border-[#E8DCCE] rounded-lg px-3.5 py-2.5 text-xs font-semibold text-[#2A1E18] focus:border-[#6B4A38] focus:outline-none"
+              required
+            >
+              <option value="">Select Event...</option>
+              {events.map((evt) => (
+                <option key={evt.id} value={evt.id}>
+                  {evt.title} ({evt.seats_remaining} seats remaining)
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-[#2A1E18] uppercase tracking-wider mb-1">
+              Select Registered Student Member
+            </label>
+            <select
+              value={formData.user_id}
+              onChange={(e) => setFormData({ ...formData, user_id: e.target.value })}
+              className="w-full bg-white border border-[#E8DCCE] rounded-lg px-3.5 py-2.5 text-xs font-semibold text-[#2A1E18] focus:border-[#6B4A38] focus:outline-none"
+            >
+              <option value="">Select Existing Member...</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name} ({u.email}) — {u.department || 'General'}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-[#2A1E18] uppercase tracking-wider mb-1">
+              Or Enter Attendee Email (If not in list)
+            </label>
+            <Input
+              type="email"
+              value={formData.user_email}
+              onChange={(e) => setFormData({ ...formData, user_email: e.target.value })}
+              placeholder="e.g. attendee@campus.edu"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-[#2A1E18] uppercase tracking-wider mb-1">
+                Pass Type
+              </label>
+              <select
+                value={formData.ticket_type}
+                onChange={(e) => handleTicketTypeChange(e.target.value)}
+                className="w-full bg-white border border-[#E8DCCE] rounded-lg px-3 py-2 text-xs font-semibold text-[#2A1E18] focus:border-[#6B4A38] focus:outline-none"
+              >
+                <option value="REGULAR">Regular Pass</option>
+                <option value="MEMBER">Member Discounted Pass</option>
+                <option value="VIP">VIP / Guest Pass</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#2A1E18] uppercase tracking-wider mb-1">
+                Amount Charged (₹)
+              </label>
+              <Input
+                type="number"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                placeholder="0 for complimentary"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-[#E8DCCE]">
+            <Button variant="ghost" size="sm" onClick={() => setCreateModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" size="sm" isLoading={submitting}>
+              Issue Pass & Generate QR
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* QR Code Pass Viewer */}
+      {selectedTicket && (
+        <QRModal
+          isOpen={qrModalOpen}
+          onClose={() => setQrModalOpen(false)}
+          ticket={selectedTicket}
+        />
+      )}
     </div>
   );
 };

@@ -27,6 +27,8 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { Badge } from '../components/common/Badge';
+import { SkyventLogo } from '../components/common/Logo';
+
 
 export const AdminLayout = () => {
   const { user, isStaff, logout } = useAuth();
@@ -79,18 +81,9 @@ export const AdminLayout = () => {
         {/* Brand Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-white/10 shrink-0">
           <Link to="/admin" className="flex items-center gap-3 overflow-hidden">
-            <div className="w-8 h-8 rounded-lg bg-[#FAF8F5] text-[#2A1E18] flex items-center justify-center font-black shrink-0">
-              S
-            </div>
-            {!sidebarCollapsed && (
-              <div>
-                <span className="font-bold tracking-tight text-white text-base block">SKYVENT</span>
-                <span className="text-[10px] text-[#E8DCCE]/70 font-semibold tracking-widest uppercase block -mt-1">
-                  Admin Console
-                </span>
-              </div>
-            )}
+            <SkyventLogo size={32} withText={!sidebarCollapsed} light={true} />
           </Link>
+
 
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}

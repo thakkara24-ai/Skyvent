@@ -79,14 +79,13 @@ export const LandingPage = () => {
             Connect • Organize • Celebrate
           </div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-[#2A1E18] tracking-tight max-w-4xl mx-auto leading-[1.1]">
-            One Campus. <br className="hidden sm:block" />
-            <span className="text-[#6B4A38]">One Community.</span> <br className="hidden sm:block" />
-            One Platform.
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-[#2A1E18] tracking-tight max-w-4xl mx-auto leading-[1.15]">
+            Student Organization <br className="hidden sm:block" />
+            <span className="text-[#6B4A38]">Management Platform</span>
           </h1>
 
           <p className="mt-6 text-base sm:text-lg text-[#7A6A5E] max-w-2xl mx-auto leading-relaxed">
-            Manage members, events, passes, merchandise, volunteer tasks and finances from one single connected platform. No more scattered spreadsheets or lost paper records.
+            Manage student memberships, campus events, secure QR ticketing, digital attendance, merchandise store, and financial treasury from one unified connected platform.
           </p>
 
           {/* Primary Action Buttons */}
@@ -102,57 +101,9 @@ export const LandingPage = () => {
               </Button>
             </Link>
           </div>
-
-          {/* 1-Click Demo Account Shortcuts */}
-          <div className="mt-12 pt-8 border-t border-[#E8DCCE]/80 max-w-3xl mx-auto">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#7A6A5E] block mb-3">
-              ⚡ Quick Hackathon Demo Logins (Instant 1-Click Access)
-            </span>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <button
-                type="button"
-                disabled={demoLoggingIn}
-                onClick={() => handleDemoLogin('admin@skyvent.demo', 'SUPER_ADMIN')}
-                className="px-3 py-1.5 text-xs font-semibold bg-[#2A1E18] text-white rounded-lg hover:bg-black transition-colors cursor-pointer disabled:opacity-50"
-              >
-                Super Admin
-              </button>
-              <button
-                type="button"
-                disabled={demoLoggingIn}
-                onClick={() => handleDemoLogin('president@skyvent.demo', 'PRESIDENT')}
-                className="px-3 py-1.5 text-xs font-semibold bg-[#6B4A38] text-white rounded-lg hover:bg-[#563B2C] transition-colors cursor-pointer disabled:opacity-50"
-              >
-                President
-              </button>
-              <button
-                type="button"
-                disabled={demoLoggingIn}
-                onClick={() => handleDemoLogin('treasurer@skyvent.demo', 'TREASURER')}
-                className="px-3 py-1.5 text-xs font-semibold bg-[#8B6353] text-white rounded-lg hover:bg-[#785344] transition-colors cursor-pointer disabled:opacity-50"
-              >
-                Treasurer
-              </button>
-              <button
-                type="button"
-                disabled={demoLoggingIn}
-                onClick={() => handleDemoLogin('volunteer@skyvent.demo', 'VOLUNTEER')}
-                className="px-3 py-1.5 text-xs font-semibold bg-[#7A6A5E] text-white rounded-lg hover:bg-[#68574C] transition-colors cursor-pointer disabled:opacity-50"
-              >
-                Volunteer / Check-In
-              </button>
-              <button
-                type="button"
-                disabled={demoLoggingIn}
-                onClick={() => handleDemoLogin('member@skyvent.demo', 'MEMBER')}
-                className="px-3 py-1.5 text-xs font-semibold bg-emerald-800 text-white rounded-lg hover:bg-emerald-900 transition-colors cursor-pointer disabled:opacity-50"
-              >
-                Student Member
-              </button>
-            </div>
-          </div>
         </div>
       </section>
+
 
       {/* Connected Workflow Pillars */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

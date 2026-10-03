@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
+import { SkyventLogo } from '../components/common/Logo';
+
 
 export const MemberLayout = () => {
   const { user, logout, isStaff } = useAuth();
@@ -70,16 +72,9 @@ export const MemberLayout = () => {
             </button>
 
             <Link to="/dashboard" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#6B4A38] flex items-center justify-center text-white font-bold text-base shadow-xs">
-                S
-              </div>
-              <div className="hidden sm:block">
-                <span className="text-lg font-bold tracking-tight text-[#2A1E18]">SKYVENT</span>
-                <span className="text-[10px] text-[#7A6A5E] uppercase tracking-wider block -mt-1 font-semibold">
-                  Member Portal
-                </span>
-              </div>
+              <SkyventLogo size={32} withText={true} />
             </Link>
+
           </div>
 
           {/* Desktop Nav */}

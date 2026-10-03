@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { productService } from '../../services/api';
 import { useSocket } from '../../context/SocketContext';
-import { ShoppingBag, Plus, Edit2, AlertTriangle, Package, Trash2, CheckCircle2 } from 'lucide-react';
+import { 
+  ShoppingBag, 
+  Plus, 
+  Edit2, 
+  AlertTriangle, 
+  Package, 
+  Trash2, 
+  CheckCircle2, 
+  Upload, 
+  Image as ImageIcon,
+  Sparkles
+} from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
@@ -9,6 +20,40 @@ import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { Skeleton } from '../../components/common/UiHelpers';
 import { toast } from 'sonner';
+
+// Curated high quality presets for student merchandise
+const PRESET_IMAGES = [
+  {
+    name: 'Vintage Hoodie',
+    url: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80',
+    category: 'APPAREL'
+  },
+  {
+    name: 'Club T-Shirt',
+    url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
+    category: 'APPAREL'
+  },
+  {
+    name: 'Campus Cap',
+    url: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=800&q=80',
+    category: 'ACCESSORIES'
+  },
+  {
+    name: 'Eco Tote Bag',
+    url: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80',
+    category: 'ACCESSORIES'
+  },
+  {
+    name: 'Hardbound Notebook',
+    url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+    category: 'STATIONERY'
+  },
+  {
+    name: 'Ceramic Campus Mug',
+    url: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80',
+    category: 'COLLECTIBLES'
+  },
+];
 
 export const AdminProductsPage = () => {
   const { subscribe } = useSocket();
@@ -61,7 +106,7 @@ export const AdminProductsPage = () => {
       sizes: 'S, M, L, XL, XXL',
       stock_quantity: '25',
       low_stock_threshold: '10',
-      image: '',
+      image: PRESET_IMAGES[0].url,
       is_active: true,
     });
     setProductModalOpen(true);
@@ -82,6 +127,26 @@ export const AdminProductsPage = () => {
       is_active: p.is_active,
     });
     setProductModalOpen(true);
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image file size must be less than 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setFormData((prev) => ({
+        ...prev,
+        image: event.target?.result || ''
+      }));
+      toast.success('Product image loaded successfully.');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSaveProduct = async (e) => {
@@ -114,6 +179,17 @@ export const AdminProductsPage = () => {
     }
   };
 
+  const handleDeleteProduct = async (p) => {
+    if (!window.confirm(`Are you sure you want to delete '${p.name}'?`)) return;
+    try {
+      await productService.deleteProduct(p.id);
+      toast.success(`Product '${p.name}' removed.`);
+      fetchProducts();
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete product.');
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -122,11 +198,11 @@ export const AdminProductsPage = () => {
             Merchandise & Inventory
           </h1>
           <p className="text-xs sm:text-sm text-[#7A6A5E] mt-1">
-            Manage organization store apparel, size variations, and automatic stock alerts
+            Manage organization store apparel, upload product images, and track stock alerts
           </p>
         </div>
 
-        <Button size="sm" variant="primary" icon={Plus} onClick={handleOpenCreate}>
+        <Button size="sm" variant="primary" icon={Plus} onClick={handleOpenCreate} className="font-bold">
           Add New Product
         </Button>
       </div>
@@ -140,20 +216,20 @@ export const AdminProductsPage = () => {
           </div>
         ) : products.length === 0 ? (
           <div className="p-12 text-center text-xs text-[#7A6A5E]">
-            No products in inventory. Add your first item.
+            No products found. Click "Add New Product" to populate your student catalog.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#FAF8F5] border-b border-[#E8DCCE] text-[#7A6A5E] font-semibold">
                 <tr>
-                  <th className="py-3 px-4">Item & Description</th>
+                  <th className="py-3 px-4">Item & Image</th>
                   <th className="py-3 px-4">SKU</th>
                   <th className="py-3 px-4">Category</th>
                   <th className="py-3 px-4">Price</th>
-                  <th className="py-3 px-4">Available Sizes</th>
                   <th className="py-3 px-4">Stock Level</th>
-                  <th className="py-3 px-4 text-right">Action</th>
+                  <th className="py-3 px-4">Sizes</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E8DCCE]/60">
@@ -162,36 +238,70 @@ export const AdminProductsPage = () => {
                   return (
                     <tr key={p.id} className="hover:bg-[#FAF8F5]/80">
                       <td className="py-3 px-4">
-                        <div className="font-bold text-[#2A1E18]">{p.name}</div>
-                        <div className="text-[11px] text-[#7A6A5E] line-clamp-1">{p.description}</div>
+                        <div className="flex items-center gap-3">
+                          {p.image ? (
+                            <img
+                              src={p.image}
+                              alt={p.name}
+                              className="w-12 h-12 rounded-lg object-cover border border-[#E8DCCE] shrink-0"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-[#FAF8F5] border border-[#E8DCCE] flex items-center justify-center text-[#7A6A5E] shrink-0">
+                              <ShoppingBag className="w-5 h-5" />
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-bold text-[#2A1E18] text-sm">{p.name}</div>
+                            <div className="text-[11px] text-[#7A6A5E] line-clamp-1">{p.description}</div>
+                          </div>
+                        </div>
                       </td>
-                      <td className="py-3 px-4 font-mono text-[#2A1E18]">{p.sku}</td>
+                      <td className="py-3 px-4 font-mono font-bold text-[#6B4A38]">
+                        {p.sku}
+                      </td>
                       <td className="py-3 px-4">
-                        <Badge variant="coffee" size="sm">{p.category}</Badge>
+                        <Badge variant="default" size="sm">
+                          {p.category}
+                        </Badge>
                       </td>
-                      <td className="py-3 px-4 font-bold text-[#2A1E18]">₹{Number(p.price).toFixed(0)}</td>
-                      <td className="py-3 px-4 text-[#7A6A5E]">
-                        {Array.isArray(p.sizes) ? p.sizes.join(', ') : 'Standard'}
+                      <td className="py-3 px-4 font-extrabold text-[#2A1E18] text-sm">
+                        ₹{Number(p.price).toFixed(0)}
                       </td>
                       <td className="py-3 px-4">
-                        <span className={`font-extrabold text-sm ${isLow ? 'text-amber-600' : 'text-emerald-700'}`}>
-                          {p.stock_quantity} units
-                        </span>
-                        {isLow && (
-                          <span className="block text-[10px] text-amber-700 font-medium">
-                            Low Stock Alert (≤ {p.low_stock_threshold})
+                        <div className="flex items-center gap-2">
+                          <span className={`font-bold text-sm ${isLow ? 'text-rose-700' : 'text-[#2A1E18]'}`}>
+                            {p.stock_quantity} units
                           </span>
-                        )}
+                          {isLow && (
+                            <Badge variant="danger" size="sm">
+                              Low Stock
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-[#7A6A5E] font-medium">
+                        {Array.isArray(p.sizes) ? p.sizes.join(', ') : '—'}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          icon={Edit2}
-                          onClick={() => handleOpenEdit(p)}
-                        >
-                          Edit
-                        </Button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            icon={Edit2}
+                            onClick={() => handleOpenEdit(p)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            icon={Trash2}
+                            onClick={() => handleDeleteProduct(p)}
+                            className="text-rose-600 hover:text-rose-800 hover:bg-rose-50"
+                          >
+                            Delete
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -202,15 +312,17 @@ export const AdminProductsPage = () => {
         )}
       </Card>
 
-      {/* Product Modal */}
+      {/* Product Modal with Image Uploader & Presets */}
       <Modal
         isOpen={productModalOpen}
         onClose={() => setProductModalOpen(false)}
-        title={editingProduct ? "Edit Product Details" : "Add New Merchandise Product"}
+        title={editingProduct ? "Edit Merchandise Product" : "Add New Merchandise Product"}
+        subtitle="Manage product specifications, pricing, inventory, and images"
+        maxWidth="max-w-2xl"
       >
         <form onSubmit={handleSaveProduct} className="space-y-4">
           <Input
-            label="Product Name"
+            label="Product Name *"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             placeholder="e.g. SKYVENT Official Hoodie"
@@ -219,7 +331,7 @@ export const AdminProductsPage = () => {
 
           <div>
             <label className="block text-xs font-semibold text-[#2A1E18] uppercase tracking-wider mb-1">
-              Description
+              Description *
             </label>
             <textarea
               value={formData.description}
@@ -248,7 +360,7 @@ export const AdminProductsPage = () => {
             </div>
 
             <Input
-              label="SKU Identifier"
+              label="SKU Identifier *"
               value={formData.sku}
               onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
               required
@@ -257,21 +369,21 @@ export const AdminProductsPage = () => {
 
           <div className="grid grid-cols-3 gap-3">
             <Input
-              label="Price (₹)"
+              label="Price (₹) *"
               type="number"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
               required
             />
             <Input
-              label="Stock Quantity"
+              label="Stock Quantity *"
               type="number"
               value={formData.stock_quantity}
               onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
               required
             />
             <Input
-              label="Low Stock Alert Threshold"
+              label="Low Stock Alert Threshold *"
               type="number"
               value={formData.low_stock_threshold}
               onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value })}
@@ -286,18 +398,93 @@ export const AdminProductsPage = () => {
             placeholder="S, M, L, XL, XXL"
           />
 
-          <Input
-            label="Image URL (Optional)"
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            placeholder="https://images.unsplash.com/..."
-          />
+          {/* Product Image Section */}
+          <div className="pt-2 border-t border-[#E8DCCE] space-y-3">
+            <label className="block text-xs font-semibold text-[#2A1E18] uppercase tracking-wider">
+              Product Image
+            </label>
+
+            {/* Live Preview Box */}
+            {formData.image && (
+              <div className="flex items-center gap-3 p-3 bg-[#FAF8F5] rounded-xl border border-[#E8DCCE]">
+                <img
+                  src={formData.image}
+                  alt="Preview"
+                  className="w-16 h-16 rounded-lg object-cover border border-[#E8DCCE] shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-bold text-[#2A1E18] block">Current Product Image</span>
+                  <span className="text-[11px] text-[#7A6A5E] truncate block">{formData.image.substring(0, 60)}...</span>
+                </div>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={() => setFormData({ ...formData, image: '' })}
+                >
+                  Remove
+                </Button>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* File Upload Button */}
+              <label className="border border-dashed border-[#6B4A38] bg-[#FAF8F5] hover:bg-[#F4EFEA] rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer transition-colors text-xs font-bold text-[#6B4A38]">
+                <Upload className="w-4 h-4" />
+                Upload Image File
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+
+              {/* Direct URL Input */}
+              <input
+                type="url"
+                value={formData.image}
+                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                placeholder="Or paste direct image URL (https://...)"
+                className="w-full px-3 py-2 text-xs bg-white border border-[#E8DCCE] rounded-lg focus:outline-none focus:border-[#6B4A38]"
+              />
+            </div>
+
+            {/* Quick 1-Click Image Presets */}
+            <div>
+              <span className="text-[11px] font-bold text-[#7A6A5E] uppercase tracking-wider block mb-1.5">
+                ⚡ Quick Presets (Click to Select)
+              </span>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                {PRESET_IMAGES.map((preset) => (
+                  <button
+                    key={preset.name}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, image: preset.url })}
+                    className={`p-1.5 rounded-lg border text-center transition-all cursor-pointer ${
+                      formData.image === preset.url
+                        ? 'border-[#6B4A38] bg-[#6B4A38]/10 ring-1 ring-[#6B4A38]'
+                        : 'border-[#E8DCCE] hover:border-[#6B4A38] bg-white'
+                    }`}
+                  >
+                    <img
+                      src={preset.url}
+                      alt={preset.name}
+                      className="w-full h-10 object-cover rounded-md mb-1"
+                    />
+                    <span className="text-[10px] font-semibold text-[#2A1E18] block truncate">
+                      {preset.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
           <div className="flex justify-end gap-2.5 pt-3 border-t border-[#E8DCCE]">
             <Button variant="ghost" size="sm" onClick={() => setProductModalOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" size="sm">
+            <Button type="submit" variant="primary" size="sm" className="font-bold">
               Save Product
             </Button>
           </div>

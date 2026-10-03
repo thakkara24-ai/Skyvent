@@ -8,6 +8,8 @@ import { Input } from '../../components/common/Input';
 import { Card } from '../../components/common/Card';
 import { toast } from 'sonner';
 
+import { SkyventLogo } from '../../components/common/Logo';
+
 export const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -37,76 +39,27 @@ export const LoginPage = () => {
     }
   };
 
-  const setDemoCredentials = (email, role) => {
-    setValue('email', email);
-    setValue('password', 'Skyvent@2026');
-  };
-
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
       <div className="max-w-md w-full space-y-6">
         {/* Header */}
         <div className="text-center">
-          <div className="w-12 h-12 rounded-xl bg-[#6B4A38] text-white font-black text-2xl flex items-center justify-center mx-auto shadow-xs mb-3">
-            S
+          <div className="flex justify-center mb-3">
+            <SkyventLogo size={52} />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2A1E18]">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#2A1E18]">
             Sign in to SKYVENT
           </h2>
-          <p className="mt-1 text-xs text-[#7A6A5E]">
-            Access your student organization dashboard and tickets
+          <p className="mt-1 text-xs sm:text-sm text-[#7A6A5E]">
+            Access your student membership, events, passes, and campus activities
           </p>
         </div>
 
-        {/* Demo Account Fillers */}
-        <div className="bg-[#E8DCCE]/40 border border-[#E8DCCE] rounded-xl p-3.5 space-y-2">
-          <span className="text-[11px] font-bold text-[#6B4A38] uppercase tracking-wider block">
-            ⚡ Quick Demo Accounts (Click to Fill)
-          </span>
-          <div className="grid grid-cols-3 gap-1.5 text-xs">
-            <button
-              type="button"
-              onClick={() => setDemoCredentials('admin@skyvent.demo', 'Admin')}
-              className="px-2 py-1 bg-white border border-[#E8DCCE] rounded-md text-[#2A1E18] hover:bg-[#FAF8F5] text-[11px] font-medium text-left truncate cursor-pointer"
-            >
-              Super Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => setDemoCredentials('president@skyvent.demo', 'President')}
-              className="px-2 py-1 bg-white border border-[#E8DCCE] rounded-md text-[#2A1E18] hover:bg-[#FAF8F5] text-[11px] font-medium text-left truncate cursor-pointer"
-            >
-              President
-            </button>
-            <button
-              type="button"
-              onClick={() => setDemoCredentials('treasurer@skyvent.demo', 'Treasurer')}
-              className="px-2 py-1 bg-white border border-[#E8DCCE] rounded-md text-[#2A1E18] hover:bg-[#FAF8F5] text-[11px] font-medium text-left truncate cursor-pointer"
-            >
-              Treasurer
-            </button>
-            <button
-              type="button"
-              onClick={() => setDemoCredentials('volunteer@skyvent.demo', 'Volunteer')}
-              className="px-2 py-1 bg-white border border-[#E8DCCE] rounded-md text-[#2A1E18] hover:bg-[#FAF8F5] text-[11px] font-medium text-left truncate cursor-pointer"
-            >
-              Volunteer
-            </button>
-            <button
-              type="button"
-              onClick={() => setDemoCredentials('member@skyvent.demo', 'Member')}
-              className="col-span-2 px-2 py-1 bg-[#6B4A38] text-white rounded-md text-[11px] font-medium text-center truncate cursor-pointer hover:bg-[#563B2C]"
-            >
-              Demo Member (Lucas)
-            </button>
-          </div>
-        </div>
-
         {/* Login Form */}
-        <Card padding="lg">
+        <Card padding="lg" className="shadow-sm border-[#E8DCCE]">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
-              label="Student Email Address"
+              label="Student / Account Email Address"
               type="email"
               placeholder="e.g. member@skyvent.demo"
               icon={Mail}
@@ -119,6 +72,7 @@ export const LoginPage = () => {
                 }
               })}
             />
+
 
             <div>
               <div className="flex items-center justify-between mb-1">

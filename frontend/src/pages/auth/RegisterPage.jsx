@@ -8,6 +8,8 @@ import { Input } from '../../components/common/Input';
 import { Card } from '../../components/common/Card';
 import { toast } from 'sonner';
 
+import { SkyventLogo } from '../../components/common/Logo';
+
 export const RegisterPage = () => {
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
@@ -31,16 +33,17 @@ export const RegisterPage = () => {
     <div className="min-h-[80vh] flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
       <div className="max-w-lg w-full space-y-6">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-xl bg-[#6B4A38] text-white font-black text-2xl flex items-center justify-center mx-auto shadow-xs mb-3">
-            S
+          <div className="flex justify-center mb-3">
+            <SkyventLogo size={52} />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2A1E18]">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#2A1E18]">
             Create Student Account
           </h2>
           <p className="mt-1 text-xs text-[#7A6A5E]">
             Join SKYVENT to participate in events and access student memberships
           </p>
         </div>
+
 
         <Card padding="lg">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

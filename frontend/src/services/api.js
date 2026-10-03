@@ -103,10 +103,12 @@ export const eventService = {
 
 export const ticketService = {
   getTickets: (params) => api.get('/tickets/', { params }),
+  createTicket: (data) => api.post('/tickets/', data),
   purchaseTicket: (eventId, paymentMethod = 'Demo Payment') => 
     api.post(`/events/${eventId}/tickets/`, { payment_method: paymentMethod }),
   cancelTicket: (id) => api.post(`/tickets/${id}/cancel/`),
 };
+
 
 export const attendanceService = {
   checkIn: (payload) => api.post('/attendance/check-in/', payload),
