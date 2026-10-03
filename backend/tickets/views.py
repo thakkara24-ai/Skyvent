@@ -1,4 +1,6 @@
 from decimal import Decimal
+from datetime import timedelta
+import uuid
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, views, status
 from rest_framework.decorators import action
@@ -7,7 +9,6 @@ from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
 from django.shortcuts import get_object_or_404
-import uuid
 
 from .models import Ticket
 from .serializers import TicketSerializer, PurchaseTicketSerializer
