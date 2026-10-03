@@ -220,7 +220,7 @@ class LoginView(views.APIView):
                 "user": UserSerializer(user).data,
                 "tokens": tokens
             },
-            message=f"Welcome back, {user.name}!"
+            message=f"Welcome, {user.name}!"
         )
 
 

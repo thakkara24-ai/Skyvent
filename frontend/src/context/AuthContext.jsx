@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('skyvent_refresh_token', tokens.refresh);
       localStorage.setItem('skyvent_user', JSON.stringify(userData));
       setUser(userData);
-      toast.success(`Welcome back, ${userData.name}!`);
+      toast.success(`Welcome, ${userData.name}!`);
       return userData;
     }
   };

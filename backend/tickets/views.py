@@ -1,12 +1,13 @@
 from decimal import Decimal
 from datetime import timedelta
 import uuid
+import logging
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, views, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 
@@ -17,6 +18,96 @@ from finance.models import Payment, Transaction
 from notifications.models import Notification
 from common.responses import success_response, error_response
 from common.utils import create_audit_log, broadcast_ws_event
+from common.pdf_generator import generate_ticket_pdf
+
+logger = logging.getLogger(__name__)
+
+def send_ticket_confirmation_email(ticket):
+    """Sends rich HTML confirmation email with official PDF Ticket Pass attached."""
+    try:
+        user = ticket.user
+        event = ticket.event
+        pdf_bytes = generate_ticket_pdf(ticket)
+        
+        subject = f"SKYVENT Pass & Ticket - {event.title} [#{ticket.ticket_number}]"
+        
+        start_time_str = timezone.localtime(event.start_datetime).strftime('%A, %B %d, %Y at %I:%M %p')
+        price_val = float(ticket.price)
+        price_str = f"₹{price_val:.2f}" if price_val > 0 else "FREE PASS"
+        
+        text_content = f"""Hello {user.name},
+
+Your event ticket for {event.title} is confirmed!
+
+Event Details:
+- Title: {event.title}
+- Venue: {event.venue}
+- Date & Time: {start_time_str}
+- Ticket Number: #{ticket.ticket_number}
+- Pass Type: {ticket.ticket_type}
+- Amount: {price_str}
+
+Please find your official Digital PDF Pass with entry QR code attached to this email.
+
+See you there!
+SKYVENT Team"""
+
+        html_content = f"""<div style="font-family: Arial, sans-serif; color: #2A1E18; max-width: 560px; margin: 0 auto; border: 1px solid #E8DCCE; border-radius: 12px; padding: 24px; background-color: #FAF8F5;">
+  <div style="text-align: center; margin-bottom: 20px;">
+    <h2 style="color: #6B4A38; margin: 0;">SKYVENT Event Pass Confirmed</h2>
+    <p style="color: #7A6A5E; font-size: 13px; margin-top: 4px;">Official Campus Student Organization Platform</p>
+  </div>
+  <p>Hello <strong>{user.name}</strong>,</p>
+  <p>Your ticket for <strong>{event.title}</strong> is confirmed. Your digital PDF pass with your admission QR code is attached to this email.</p>
+  
+  <div style="background-color: #FFFFFF; border: 1px solid #E8DCCE; border-radius: 8px; padding: 16px; margin: 16px 0;">
+    <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+      <tr>
+        <td style="padding: 6px 0; color: #7A6A5E;">Event:</td>
+        <td style="padding: 6px 0; font-weight: bold; text-align: right;">{event.title}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #7A6A5E;">Venue:</td>
+        <td style="padding: 6px 0; font-weight: bold; text-align: right;">{event.venue}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #7A6A5E;">Date & Time:</td>
+        <td style="padding: 6px 0; font-weight: bold; color: #6B4A38; text-align: right;">{start_time_str}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #7A6A5E;">Ticket Number:</td>
+        <td style="padding: 6px 0; font-family: monospace; font-weight: bold; text-align: right;">#{ticket.ticket_number}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #7A6A5E;">Pass Type:</td>
+        <td style="padding: 6px 0; font-weight: bold; text-align: right;">{ticket.ticket_type}</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 0; color: #7A6A5E;">Amount Paid:</td>
+        <td style="padding: 6px 0; font-weight: bold; text-align: right;">{price_str}</td>
+      </tr>
+    </table>
+  </div>
+  
+  <p style="font-size: 12px; color: #7A6A5E; line-height: 1.5;">
+    📎 <strong>PDF Pass Attached:</strong> You can download or print the attached PDF ticket, or present the live QR code from your SKYVENT Member Dashboard on your smartphone at the event entrance.
+  </p>
+  
+  <p style="font-size: 13px; margin-top: 24px;">Best regards,<br><strong>SKYVENT Team</strong></p>
+</div>"""
+
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.attach(f"SKYVENT_Ticket_{ticket.ticket_number}.pdf", pdf_bytes, "application/pdf")
+        email.send(fail_silently=False)
+        logger.info(f"Ticket PDF confirmation sent to {user.email} for ticket #{ticket.ticket_number}")
+    except Exception as e:
+        logger.error(f"Failed to send ticket email: {e}")
 
 User = get_user_model()
 
@@ -117,6 +208,9 @@ class TicketViewSet(viewsets.ModelViewSet):
             message=f"A ticket (#{ticket.ticket_number}) for '{event.title}' has been issued to your account.",
             notification_type='TICKET'
         )
+
+        # Send confirmation email with PDF ticket attached
+        send_ticket_confirmation_email(ticket)
 
         create_audit_log(request.user, "TICKET_ISSUED_ADMIN", "Ticket", ticket.id, {
             "ticket_number": ticket.ticket_number,
@@ -316,28 +410,8 @@ class EventTicketPurchaseView(views.APIView):
             notification_type='TICKET'
         )
 
-        # Confirmation email
-        try:
-            send_mail(
-                subject=f"SKYVENT Ticket Confirmation - {event.title}",
-                message=(
-                    f"Hello {user.name},\n\n"
-                    f"Your ticket for {event.title} is confirmed!\n\n"
-                    f"Event: {event.title}\n"
-                    f"Venue: {event.venue}\n"
-                    f"Date & Time: {event.start_datetime.strftime('%A, %B %d, %Y at %I:%M %p')}\n"
-                    f"Ticket Number: {ticket_number}\n"
-                    f"Pass Type: {ticket_type}\n"
-                    f"Amount Paid: ₹{price}\n\n"
-                    f"Show your digital QR pass from the SKYVENT dashboard at the check-in desk.\n\n"
-                    f"See you there!\nSKYVENT Team"
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False
-            )
-        except Exception as e:
-            pass
+        # Dispatch confirmation email with attached PDF pass & QR code
+        send_ticket_confirmation_email(ticket)
 
         create_audit_log(user, "TICKET_PURCHASED", "Ticket", ticket.id, {
             "ticket_number": ticket_number,

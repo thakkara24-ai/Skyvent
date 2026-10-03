@@ -81,7 +81,7 @@ export const MemberDashboardPage = () => {
             Student Member Portal
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Welcome back, {user?.name}!
+            Welcome, {user?.name}!
           </h1>
           <p className="text-xs sm:text-sm text-[#E8DCCE]/80 mt-1">
             {user?.department ? `${user.department} • ` : ''} Student ID: {user?.student_id || 'STU-XXXX'}

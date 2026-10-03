@@ -21,6 +21,7 @@ import { Input } from '../../components/common/Input';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { Skeleton } from '../../components/common/UiHelpers';
+import { ImageUploadInput } from '../../components/common/ImageUploadInput';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -460,6 +461,14 @@ export const AdminFinancePage = () => {
               required
             />
           </div>
+
+          <ImageUploadInput
+            label="Receipt Proof / Invoice (Upload File or Paste Link)"
+            value={newExpenseData.receipt}
+            onChange={(val) => setNewExpenseData({ ...newExpenseData, receipt: val })}
+            placeholder="https://images.unsplash.com/..."
+            helperText="Upload a scanned bill, UPI receipt screenshot, or paste invoice image link"
+          />
 
           <div className="flex justify-end gap-2.5 pt-3 border-t border-[#E8DCCE]">
             <Button variant="ghost" size="sm" onClick={() => setExpenseModalOpen(false)}>

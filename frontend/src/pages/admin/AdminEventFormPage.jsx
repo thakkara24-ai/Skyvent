@@ -7,7 +7,36 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Select } from '../../components/common/Select';
+import { ImageUploadInput } from '../../components/common/ImageUploadInput';
 import { toast } from 'sonner';
+
+const EVENT_PRESET_IMAGES = [
+  {
+    name: 'Hackathon & Code',
+    url: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80',
+    category: 'Technical'
+  },
+  {
+    name: 'Campus Gala Evening',
+    url: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=800&q=80',
+    category: 'Cultural'
+  },
+  {
+    name: 'Design & Workshop',
+    url: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80',
+    category: 'Workshop'
+  },
+  {
+    name: 'Music & Acoustic Fest',
+    url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80',
+    category: 'Social'
+  },
+  {
+    name: 'Career & Alumni Meet',
+    url: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=800&q=80',
+    category: 'Career'
+  }
+];
 
 export const toLocalDatetimeInput = (dateObj) => {
   if (!dateObj) return '';
@@ -48,7 +77,7 @@ export const AdminEventFormPage = () => {
   const regOpenDefault = new Date(now.getTime() - 15 * 60 * 1000);
   const regCloseDefault = new Date(now.getTime() + 25 * 3600 * 1000);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm({
     defaultValues: {
       category: 'TECHNICAL',
       status: 'PUBLISHED',
@@ -59,8 +88,11 @@ export const AdminEventFormPage = () => {
       end_datetime: toLocalDatetimeInput(endDefault),
       registration_open: toLocalDatetimeInput(regOpenDefault),
       registration_close: toLocalDatetimeInput(regCloseDefault),
+      cover_image: '',
     }
   });
+
+  const coverImageVal = watch('cover_image');
 
   useEffect(() => {
     if (isEdit) {
@@ -258,28 +290,29 @@ export const AdminEventFormPage = () => {
           </div>
 
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-[#2A1E18] uppercase tracking-wider mb-1">
-                Status
-              </label>
-              <select
-                className="w-full bg-white border border-[#E8DCCE] rounded-lg px-3 py-2 text-xs font-semibold text-[#2A1E18] focus:border-[#6B4A38] focus:outline-none"
-                {...register('status')}
-              >
-                <option value="PUBLISHED">Published (Open for Registration)</option>
-                <option value="DRAFT">Draft</option>
-                <option value="CANCELLED">Cancelled</option>
-                <option value="COMPLETED">Completed</option>
-              </select>
-            </div>
-
-            <Input
-              label="Cover Image URL (Optional)"
-              placeholder="https://images.unsplash.com/..."
-              {...register('cover_image')}
-            />
+          <div>
+            <label className="block text-xs font-semibold text-[#2A1E18] uppercase tracking-wider mb-1">
+              Event Status
+            </label>
+            <select
+              className="w-full bg-white border border-[#E8DCCE] rounded-lg px-3 py-2 text-xs font-semibold text-[#2A1E18] focus:border-[#6B4A38] focus:outline-none"
+              {...register('status')}
+            >
+              <option value="PUBLISHED">Published (Open for Registration)</option>
+              <option value="DRAFT">Draft</option>
+              <option value="CANCELLED">Cancelled</option>
+              <option value="COMPLETED">Completed</option>
+            </select>
           </div>
+
+          <ImageUploadInput
+            label="Event Cover Image (File Upload or Web Link)"
+            value={coverImageVal}
+            onChange={(val) => setValue('cover_image', val, { shouldDirty: true })}
+            placeholder="https://images.unsplash.com/..."
+            presets={EVENT_PRESET_IMAGES}
+            helperText="Upload a banner from your computer (PNG, JPG, WEBP) or paste an image link"
+          />
 
           <div className="pt-4 border-t border-[#E8DCCE] flex justify-end gap-3">
             <Button variant="ghost" size="md" onClick={() => navigate('/admin/events')}>

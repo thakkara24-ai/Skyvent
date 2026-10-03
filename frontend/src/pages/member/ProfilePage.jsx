@@ -6,13 +6,14 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Badge } from '../../components/common/Badge';
+import { ImageUploadInput } from '../../components/common/ImageUploadInput';
 import { toast } from 'sonner';
 
 export const ProfilePage = () => {
   const { user, updateProfile } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     defaultValues: {
       name: user?.name || '',
       phone: user?.phone || '',
@@ -21,6 +22,8 @@ export const ProfilePage = () => {
       avatar: user?.avatar || '',
     }
   });
+
+  const avatarVal = watch('avatar');
 
   const onSubmit = async (data) => {
     setIsSaving(true);
@@ -47,9 +50,21 @@ export const ProfilePage = () => {
       <Card padding="lg">
         {/* User Identity Header */}
         <div className="flex items-center gap-4 pb-6 border-b border-[#E8DCCE]">
-          <div className="w-16 h-16 rounded-full bg-[#6B4A38] text-white flex items-center justify-center font-black text-2xl shadow-sm">
-            {user?.name ? user.name[0].toUpperCase() : 'U'}
-          </div>
+          {user?.avatar || avatarVal ? (
+            <img
+              src={avatarVal || user?.avatar}
+              alt="Avatar"
+              className="w-16 h-16 rounded-full object-cover border-2 border-[#6B4A38] shadow-sm"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80';
+              }}
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-[#6B4A38] text-white flex items-center justify-center font-black text-2xl shadow-sm">
+              {user?.name ? user.name[0].toUpperCase() : 'U'}
+            </div>
+          )}
           <div>
             <h3 className="text-lg font-bold text-[#2A1E18]">{user?.name}</h3>
             <p className="text-xs text-[#7A6A5E]">{user?.email}</p>
@@ -62,6 +77,14 @@ export const ProfilePage = () => {
 
         {/* Profile Edit Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-6">
+          <ImageUploadInput
+            label="Profile Avatar Photo (Upload File or Paste Link)"
+            value={avatarVal}
+            onChange={(val) => setValue('avatar', val, { shouldDirty: true })}
+            placeholder="https://images.unsplash.com/..."
+            helperText="Upload a profile picture from your phone/computer or paste an image URL"
+          />
+
           <Input
             label="Full Name"
             icon={User}

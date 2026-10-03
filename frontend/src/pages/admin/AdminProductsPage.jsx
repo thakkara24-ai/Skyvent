@@ -19,6 +19,7 @@ import { Input } from '../../components/common/Input';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { Skeleton } from '../../components/common/UiHelpers';
+import { ImageUploadInput } from '../../components/common/ImageUploadInput';
 import { toast } from 'sonner';
 
 // Curated high quality presets for student merchandise
@@ -398,87 +399,14 @@ export const AdminProductsPage = () => {
             placeholder="S, M, L, XL, XXL"
           />
 
-          {/* Product Image Section */}
-          <div className="pt-2 border-t border-[#E8DCCE] space-y-3">
-            <label className="block text-xs font-semibold text-[#2A1E18] uppercase tracking-wider">
-              Product Image
-            </label>
-
-            {/* Live Preview Box */}
-            {formData.image && (
-              <div className="flex items-center gap-3 p-3 bg-[#FAF8F5] rounded-xl border border-[#E8DCCE]">
-                <img
-                  src={formData.image}
-                  alt="Preview"
-                  className="w-16 h-16 rounded-lg object-cover border border-[#E8DCCE] shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <span className="text-xs font-bold text-[#2A1E18] block">Current Product Image</span>
-                  <span className="text-[11px] text-[#7A6A5E] truncate block">{formData.image.substring(0, 60)}...</span>
-                </div>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  onClick={() => setFormData({ ...formData, image: '' })}
-                >
-                  Remove
-                </Button>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* File Upload Button */}
-              <label className="border border-dashed border-[#6B4A38] bg-[#FAF8F5] hover:bg-[#F4EFEA] rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer transition-colors text-xs font-bold text-[#6B4A38]">
-                <Upload className="w-4 h-4" />
-                Upload Image File
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-              </label>
-
-              {/* Direct URL Input */}
-              <input
-                type="url"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                placeholder="Or paste direct image URL (https://...)"
-                className="w-full px-3 py-2 text-xs bg-white border border-[#E8DCCE] rounded-lg focus:outline-none focus:border-[#6B4A38]"
-              />
-            </div>
-
-            {/* Quick 1-Click Image Presets */}
-            <div>
-              <span className="text-[11px] font-bold text-[#7A6A5E] uppercase tracking-wider block mb-1.5">
-                ⚡ Quick Presets (Click to Select)
-              </span>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                {PRESET_IMAGES.map((preset) => (
-                  <button
-                    key={preset.name}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, image: preset.url })}
-                    className={`p-1.5 rounded-lg border text-center transition-all cursor-pointer ${
-                      formData.image === preset.url
-                        ? 'border-[#6B4A38] bg-[#6B4A38]/10 ring-1 ring-[#6B4A38]'
-                        : 'border-[#E8DCCE] hover:border-[#6B4A38] bg-white'
-                    }`}
-                  >
-                    <img
-                      src={preset.url}
-                      alt={preset.name}
-                      className="w-full h-10 object-cover rounded-md mb-1"
-                    />
-                    <span className="text-[10px] font-semibold text-[#2A1E18] block truncate">
-                      {preset.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          <ImageUploadInput
+            label="Product Image (File Upload or Web Link)"
+            value={formData.image}
+            onChange={(val) => setFormData({ ...formData, image: val })}
+            placeholder="https://images.unsplash.com/..."
+            presets={PRESET_IMAGES}
+            helperText="Upload apparel/item photo or choose from catalog presets"
+          />
 
           <div className="flex justify-end gap-2.5 pt-3 border-t border-[#E8DCCE]">
             <Button variant="ghost" size="sm" onClick={() => setProductModalOpen(false)}>
