@@ -53,11 +53,7 @@ export const MemberLayout = () => {
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: Home },
-    { name: 'Events', path: '/events', icon: Calendar },
     { name: 'Membership', path: '/membership', icon: CreditCard },
-    { name: 'Store', path: '/store', icon: ShoppingBag },
-    { name: 'My Tickets', path: '/my-tickets', icon: Ticket },
-    { name: 'My Orders', path: '/my-orders', icon: Package },
   ];
 
 
@@ -118,7 +114,7 @@ export const MemberLayout = () => {
 
             {/* Notification Bell */}
             <Link
-              to="/notifications"
+              to="/profile"
               className="relative p-2 rounded-lg text-[#7A6A5E] hover:text-[#2A1E18] hover:bg-[#FAF8F5] transition-colors"
             >
               <Bell className="w-5 h-5" />

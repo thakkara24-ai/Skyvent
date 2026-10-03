@@ -13,8 +13,6 @@ export const PublicLayout = () => {
 
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Events', path: '/events' },
-    { name: 'Merchandise', path: '/merchandise' },
     { name: 'About', path: '/about' },
   ];
 
@@ -122,7 +120,7 @@ export const PublicLayout = () => {
                 Platform
               </h5>
               <ul className="space-y-2 text-xs text-[#E8DCCE]/70">
-                <li><Link to="/events" className="hover:text-white transition-colors">Campus Events</Link></li>
+                
                 <li><Link to="/login" className="hover:text-white transition-colors">Member Portal</Link></li>
                 <li><Link to="/about" className="hover:text-white transition-colors">About System</Link></li>
               </ul>
