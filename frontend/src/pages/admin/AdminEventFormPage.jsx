@@ -9,6 +9,26 @@ import { Input } from '../../components/common/Input';
 import { Select } from '../../components/common/Select';
 import { toast } from 'sonner';
 
+export const toLocalDatetimeInput = (dateObj) => {
+  if (!dateObj) return '';
+  const d = typeof dateObj === 'string' ? new Date(dateObj) : dateObj;
+  if (isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  const year = d.getFullYear();
+  const month = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+export const toISOWithTimezone = (localDatetimeStr) => {
+  if (!localDatetimeStr) return null;
+  const d = new Date(localDatetimeStr);
+  if (isNaN(d.getTime())) return localDatetimeStr;
+  return d.toISOString();
+};
+
 export const AdminEventFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -17,7 +37,30 @@ export const AdminEventFormPage = () => {
   const [loading, setLoading] = useState(isEdit);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  // Reasonable defaults for new events:
+  // - starts in 2 hours
+  // - ends tomorrow (+26 hours)
+  // - registration opens 15 mins ago (active immediately)
+  // - registration closes 1 hr before event end
+  const now = new Date();
+  const startDefault = new Date(now.getTime() + 2 * 3600 * 1000);
+  const endDefault = new Date(now.getTime() + 26 * 3600 * 1000);
+  const regOpenDefault = new Date(now.getTime() - 15 * 60 * 1000);
+  const regCloseDefault = new Date(now.getTime() + 25 * 3600 * 1000);
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    defaultValues: {
+      category: 'TECHNICAL',
+      status: 'PUBLISHED',
+      capacity: '50',
+      member_price: '0.00',
+      non_member_price: '0.00',
+      start_datetime: toLocalDatetimeInput(startDefault),
+      end_datetime: toLocalDatetimeInput(endDefault),
+      registration_open: toLocalDatetimeInput(regOpenDefault),
+      registration_close: toLocalDatetimeInput(regCloseDefault),
+    }
+  });
 
   useEffect(() => {
     if (isEdit) {
@@ -31,13 +74,13 @@ export const AdminEventFormPage = () => {
               description: e.description,
               category: e.category,
               venue: e.venue,
-              start_datetime: e.start_datetime ? e.start_datetime.slice(0, 16) : '',
-              end_datetime: e.end_datetime ? e.end_datetime.slice(0, 16) : '',
+              start_datetime: toLocalDatetimeInput(e.start_datetime),
+              end_datetime: toLocalDatetimeInput(e.end_datetime),
               capacity: e.capacity,
               member_price: e.member_price,
               non_member_price: e.non_member_price,
-              registration_open: e.registration_open ? e.registration_open.slice(0, 16) : '',
-              registration_close: e.registration_close ? e.registration_close.slice(0, 16) : '',
+              registration_open: toLocalDatetimeInput(e.registration_open),
+              registration_close: toLocalDatetimeInput(e.registration_close),
               status: e.status,
               cover_image: e.cover_image || ''
             });
@@ -57,6 +100,10 @@ export const AdminEventFormPage = () => {
     try {
       const payload = {
         ...data,
+        start_datetime: toISOWithTimezone(data.start_datetime),
+        end_datetime: toISOWithTimezone(data.end_datetime),
+        registration_open: toISOWithTimezone(data.registration_open),
+        registration_close: toISOWithTimezone(data.registration_close),
         capacity: parseInt(data.capacity),
         member_price: parseFloat(data.member_price),
         non_member_price: parseFloat(data.non_member_price),
@@ -139,12 +186,12 @@ export const AdminEventFormPage = () => {
             />
           </div>
 
-          {/* Event Schedule (No Past Dates Allowed) */}
+          {/* Event Schedule (No Past Dates Allowed for Event Start/End) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Start Date & Time *"
               type="datetime-local"
-              min={new Date().toISOString().slice(0, 16)}
+              min={toLocalDatetimeInput(new Date())}
               error={errors.start_datetime?.message}
               {...register('start_datetime', { 
                 required: 'Start time is required',
@@ -155,7 +202,7 @@ export const AdminEventFormPage = () => {
             <Input
               label="End Date & Time *"
               type="datetime-local"
-              min={new Date().toISOString().slice(0, 16)}
+              min={toLocalDatetimeInput(new Date())}
               error={errors.end_datetime?.message}
               {...register('end_datetime', { 
                 required: 'End time is required',
@@ -194,7 +241,6 @@ export const AdminEventFormPage = () => {
             <Input
               label="Registration Open *"
               type="datetime-local"
-              min={new Date().toISOString().slice(0, 16)}
               error={errors.registration_open?.message}
               {...register('registration_open', { required: 'Registration open is required' })}
             />
@@ -202,7 +248,7 @@ export const AdminEventFormPage = () => {
             <Input
               label="Registration Close *"
               type="datetime-local"
-              min={new Date().toISOString().slice(0, 16)}
+              min={toLocalDatetimeInput(new Date())}
               error={errors.registration_close?.message}
               {...register('registration_close', { 
                 required: 'Registration close is required',

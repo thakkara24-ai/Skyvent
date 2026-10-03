@@ -229,13 +229,15 @@ class EventTicketPurchaseView(views.APIView):
                 code="EVENT_NOT_PUBLISHED"
             )
 
-        # Business Rule 2: Registration window validation
-        if now < event.registration_open:
+        # Business Rule 2: Registration window validation (with 5-minute tolerance)
+        tolerance = timedelta(minutes=5)
+        if (now + tolerance) < event.registration_open:
+            local_open = timezone.localtime(event.registration_open)
             return error_response(
-                message=f"Registration opens on {event.registration_open.strftime('%b %d, %Y at %I:%M %p')}.",
+                message=f"Registration opens on {local_open.strftime('%b %d, %Y at %I:%M %p')}.",
                 code="REGISTRATION_NOT_OPEN"
             )
-        if now > event.registration_close:
+        if (now - tolerance) > event.registration_close:
             return error_response(
                 message="Registration for this event has closed.",
                 code="REGISTRATION_CLOSED"
