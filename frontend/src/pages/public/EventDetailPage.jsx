@@ -8,11 +8,9 @@ import {
   Clock, 
   Users, 
   Ticket as TicketIcon, 
-  ShieldCheck, 
-  Sparkles, 
+  Award, 
   ArrowLeft, 
   QrCode, 
-  AlertCircle, 
   CheckCircle2 
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
@@ -45,7 +43,7 @@ export const EventDetailPage = () => {
           setCurrentTicket(res.data.user_ticket);
         }
       }
-    } catch (err) {
+    } catch {
       toast.error('Could not load event details.');
     } finally {
       setLoading(false);
@@ -217,7 +215,7 @@ export const EventDetailPage = () => {
 
               <div className="flex items-center justify-between p-2.5 bg-emerald-50 rounded-lg border border-emerald-200">
                 <div className="text-xs font-semibold text-emerald-900 flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-emerald-700" />
+                  <Award className="w-4 h-4 text-emerald-700" />
                   Active Member Rate:
                 </div>
                 <span className="text-base font-extrabold text-emerald-800">
@@ -270,7 +268,7 @@ export const EventDetailPage = () => {
                   Reserve Pass (₹{applicablePrice.toFixed(0)})
                 </Button>
                 <div className="text-[10px] text-center text-[#7A6A5E]">
-                  Demo Payment Simulator • Instant digital pass delivery
+                  University Payment Gateway • Instant digital pass delivery
                 </div>
               </div>
             )}

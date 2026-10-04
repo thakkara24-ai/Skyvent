@@ -14,16 +14,16 @@ export const Select = forwardRef(({
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={selectId} className="block text-xs font-semibold text-[#2A1E18] uppercase tracking-wider mb-1.5">
+        <label htmlFor={selectId} className="block text-xs font-semibold text-[var(--ink-brown)] uppercase tracking-wider mb-1.5">
           {label}
         </label>
       )}
       <select
         ref={ref}
         id={selectId}
-        className={`w-full bg-white border ${
-          error ? 'border-rose-500 focus:ring-rose-500' : 'border-[#E8DCCE] focus:border-[#6B4A38] focus:ring-[#6B4A38]'
-        } px-3.5 py-2 text-sm text-[#2A1E18] rounded-lg shadow-xs focus:outline-none focus:ring-1 transition-colors ${className}`}
+        className={`w-full bg-[var(--card-bg,white)] border ${
+          error ? 'border-rose-500 focus:ring-rose-500' : 'border-[var(--sand)] focus:border-[var(--coffee-brown)] focus:ring-[var(--coffee-brown)]'
+        } px-3.5 py-2 text-sm text-[var(--ink-brown)] rounded-lg shadow-xs focus:outline-none focus:ring-1 transition-colors ${className}`}
         {...props}
       >
         {options.map((opt) => (

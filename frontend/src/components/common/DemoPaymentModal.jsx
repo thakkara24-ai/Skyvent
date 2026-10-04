@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { Button } from './Button';
-import { Input } from './Input';
 import { 
   ShieldCheck, 
-  CreditCard, 
-  Sparkles, 
-  CheckCircle2, 
+  Award, 
   QrCode, 
   Smartphone,
-  Wallet,
-  ArrowRight
+  Wallet
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -26,10 +22,9 @@ export const DemoPaymentModal = ({
   onConfirm,
   isProcessing = false,
 }) => {
-  // Tabs: 'upi_qr' | 'upi_id' | 'demo_wallet'
+  // Tabs: 'upi_qr' | 'upi_id' | 'student_wallet'
   const [paymentMode, setPaymentMode] = useState('upi_qr');
   const [upiIdInput, setUpiIdInput] = useState('student@oksbi');
-  const [upiVerified, setUpiVerified] = useState(true);
 
   const total = finalAmount !== undefined ? finalAmount : Math.max(0, amount - discount);
   const upiPayload = `upi://pay?pa=skyvent.campus@okhdfcbank&pn=SKYVENT%20Student%20Org&am=${Number(total).toFixed(2)}&cu=INR&tn=${encodeURIComponent(itemName || 'SKYVENT')}`;
@@ -68,7 +63,7 @@ export const DemoPaymentModal = ({
           {discount > 0 && (
             <div className="flex justify-between text-emerald-700 font-medium">
               <span className="flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> Member Privilege:
+                <Award className="w-3 h-3" /> Member Privilege:
               </span>
               <span>-₹{Number(discount).toFixed(2)}</span>
             </div>
@@ -115,9 +110,9 @@ export const DemoPaymentModal = ({
 
             <button
               type="button"
-              onClick={() => setPaymentMode('demo_wallet')}
+              onClick={() => setPaymentMode('student_wallet')}
               className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${
-                paymentMode === 'demo_wallet'
+                paymentMode === 'student_wallet'
                   ? 'border-[#6B4A38] bg-[#6B4A38]/10 text-[#6B4A38] font-bold shadow-xs'
                   : 'border-[#E8DCCE] bg-white text-[#7A6A5E] hover:bg-[#FAF8F5]'
               }`}
@@ -167,7 +162,6 @@ export const DemoPaymentModal = ({
                 />
                 <button
                   type="button"
-                  onClick={() => setUpiVerified(true)}
                   className="px-3 py-1.5 bg-[#FAF8F5] border border-[#E8DCCE] text-[#6B4A38] text-xs font-bold rounded-lg hover:bg-[#E8DCCE]/40 cursor-pointer"
                 >
                   ✓ Verified
@@ -181,7 +175,7 @@ export const DemoPaymentModal = ({
         )}
 
         {/* Option 3: Student Wallet View */}
-        {paymentMode === 'demo_wallet' && (
+        {paymentMode === 'student_wallet' && (
           <div className="p-4 bg-white border border-[#E8DCCE] rounded-xl space-y-2 text-xs text-[#2A1E18]">
             <div className="flex justify-between items-center">
               <span className="font-semibold">Campus Card Balance:</span>

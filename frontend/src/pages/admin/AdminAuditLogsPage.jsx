@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardService, extractDataArray } from '../../services/api';
-import { ScrollText, Search, ShieldAlert } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { Skeleton } from '../../components/common/UiHelpers';

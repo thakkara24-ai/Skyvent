@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { eventService, extractDataArray } from '../../services/api';
-import { Calendar, Search, MapPin, Users, Filter, Clock, Sparkles } from 'lucide-react';
+import { Calendar, Search, MapPin, Clock } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';

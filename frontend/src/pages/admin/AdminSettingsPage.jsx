@@ -1,12 +1,9 @@
 import React from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { Settings, ShieldCheck, Mail, Database, Terminal, CheckCircle2 } from 'lucide-react';
+import { Mail, Database, Terminal } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
-import { Button } from '../../components/common/Button';
 
 export const AdminSettingsPage = () => {
-  const { user } = useAuth();
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">

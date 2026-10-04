@@ -1,13 +1,13 @@
 import React from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Calendar, Compass, Shield, ShoppingBag, LogIn, UserPlus, Sparkles } from 'lucide-react';
+import { LogIn, UserPlus } from 'lucide-react';
 import { Button } from '../components/common/Button';
-
 import { SkyventLogo } from '../components/common/Logo';
+import { ThemeSwitcher } from '../components/common/ThemeSwitcher';
 
 export const PublicLayout = () => {
-  const { user, isAuthenticated, logout, isStaff } = useAuth();
+  const { isAuthenticated, logout, isStaff } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -18,17 +18,15 @@ export const PublicLayout = () => {
     { name: 'About', path: '/about' },
   ];
 
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#2A1E18]">
+    <div className="min-h-screen flex flex-col bg-[var(--cream)] text-[var(--ink-brown)] transition-colors duration-200">
       {/* Main Navbar */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E8DCCE]">
+      <header className="sticky top-0 z-40 bg-[var(--card-bg,white)]/95 backdrop-blur-md border-b border-[var(--sand)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group">
             <SkyventLogo size={36} withText={true} />
           </Link>
-
 
           {/* Navigation links */}
           <nav className="hidden md:flex items-center gap-6">
@@ -39,7 +37,7 @@ export const PublicLayout = () => {
                   key={link.name}
                   to={link.path}
                   className={`text-sm font-medium transition-colors ${
-                    isActive ? 'text-[#6B4A38] font-semibold' : 'text-[#7A6A5E] hover:text-[#2A1E18]'
+                    isActive ? 'text-[var(--coffee-brown)] font-bold' : 'text-[var(--warm-gray)] hover:text-[var(--ink-brown)]'
                   }`}
                 >
                   {link.name}
@@ -48,10 +46,13 @@ export const PublicLayout = () => {
             })}
           </nav>
 
-          {/* Right Action buttons */}
-          <div className="flex items-center gap-3">
+          {/* Right Action buttons + Theme Gear Switcher */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* Theme Switcher with Gear Icon */}
+            <ThemeSwitcher />
+
             {isAuthenticated ? (
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2 sm:gap-2.5">
                 {isStaff ? (
                   <Button
                     size="sm"
@@ -78,7 +79,7 @@ export const PublicLayout = () => {
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2 sm:gap-2.5">
                 <Link to="/login">
                   <Button size="sm" variant="ghost" icon={LogIn}>
                     Login
@@ -101,50 +102,35 @@ export const PublicLayout = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#2A1E18] text-[#FAF8F5] border-t border-[#6B4A38]/30 pt-12 pb-8">
+      <footer className="bg-[var(--ink-brown)] text-[var(--cream)] border-t border-[var(--coffee-brown)]/30 pt-12 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-[#7A6A5E]/30">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-10 border-b border-[var(--warm-gray)]/30">
             {/* Brand column */}
             <div className="md:col-span-2 space-y-3">
               <SkyventLogo size={32} withText={true} light={true} />
-              <p className="text-xs text-[#E8DCCE]/80 leading-relaxed max-w-sm">
-
+              <p className="text-xs text-[var(--sand)]/80 leading-relaxed max-w-sm">
                 The comprehensive student organization management platform. Unifying memberships, events, ticketing, digital check-in, merchandise, and financial reporting.
               </p>
-              <div className="text-xs text-[#8B6353] font-medium pt-1">
+              <div className="text-xs text-[var(--clay-brown)] font-medium pt-1">
                 "Connect. Organize. Celebrate."
               </div>
             </div>
 
             {/* Quick Links */}
             <div>
-              <h5 className="text-xs font-bold uppercase tracking-wider text-[#E8DCCE] mb-3">
-                Platform
+              <h5 className="text-xs font-bold uppercase tracking-wider text-[var(--sand)] mb-3">
+                Quick Navigation
               </h5>
-              <ul className="space-y-2 text-xs text-[#E8DCCE]/70">
-                <li><Link to="/events" className="hover:text-white transition-colors">Campus Events</Link></li>
-                <li><Link to="/login" className="hover:text-white transition-colors">Member Portal</Link></li>
-                <li><Link to="/about" className="hover:text-white transition-colors">About System</Link></li>
+              <ul className="space-y-2 text-xs text-[var(--sand)]/70">
+                <li><Link to="/events" className="hover:text-white transition-colors">Campus Events & Passes</Link></li>
+                <li><Link to="/merchandise" className="hover:text-white transition-colors">Official Merchandise Store</Link></li>
+                <li><Link to="/login" className="hover:text-white transition-colors">Student Member Portal</Link></li>
+                <li><Link to="/about" className="hover:text-white transition-colors">About Platform</Link></li>
               </ul>
-            </div>
-
-            {/* Demo Accounts Quick Info */}
-            <div>
-              <h5 className="text-xs font-bold uppercase tracking-wider text-[#E8DCCE] mb-3">
-                Demo Accounts
-              </h5>
-              <div className="text-[11px] text-[#E8DCCE]/70 space-y-1 font-mono">
-                <div>admin@skyvent.demo</div>
-                <div>president@skyvent.demo</div>
-                <div>treasurer@skyvent.demo</div>
-                <div>volunteer@skyvent.demo</div>
-                <div>member@skyvent.demo</div>
-                <div className="text-[#8B6353] pt-1">Password: Skyvent@2026</div>
-              </div>
             </div>
           </div>
 
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-[#E8DCCE]/60 gap-3">
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-[var(--sand)]/60 gap-3">
             <div>
               © {new Date().getFullYear()} SKYVENT Student Organization Platform. All rights reserved.
             </div>

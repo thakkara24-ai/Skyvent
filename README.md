@@ -1,18 +1,26 @@
-# Member 2 — Frontend Developer: Events, Ticketing, Merchandise & Admin
+# SKYVENT — Part 2: Frontend Admin & Operations
 
-## Actual owned code
-- `src/pages/public/EventsPage.jsx` and `EventDetailPage.jsx`
-- `src/pages/public/MerchandiseShopPage.jsx`
-- `src/pages/admin/` — dashboard, members, memberships, events, tickets, attendance, products, orders, announcements, fundraisers, tasks, finance, reports, audit logs and settings
-- auth/public shell and shared components are included as integration dependencies
+## Assigned role
+Frontend Developer 2 — Admin + Operations UI.
+
+## Included working scope
+- Admin dashboard
+- Members and memberships
+- Event management
+- Ticket management
+- Attendance / QR check-in UI
+- Merchandise and inventory
+- Orders
+- Announcements and notifications
+- Fundraisers and tasks
+- Finance and reports
+- Audit logs and settings
+- Shared React context, layouts, components and API service required to run this part
 
 ## Run
-```powershell
-cd frontend
+```bash
 npm install
 npm run dev
 ```
-Open `http://localhost:5174/`. API is configured for backend operations workspace on port 8002.
 
-## Reviewer demo
-Login as staff → Admin Dashboard → Events → create/manage event → Tickets → QR Check-In → Merchandise → Orders → Finance → Reports.
+The frontend expects the backend API configured in `.env` based on `.env.example`.

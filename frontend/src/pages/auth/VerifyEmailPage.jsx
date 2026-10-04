@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Mail, CheckCircle2, RefreshCw, KeyRound, ArrowRight } from 'lucide-react';
+import { Mail, CheckCircle2, RefreshCw, KeyRound } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Card } from '../../components/common/Card';
@@ -46,7 +46,7 @@ export const VerifyEmailPage = () => {
     try {
       const data = await verifyOtp(email, otp, 'REGISTER');
       if (data?.user) {
-        if (['SUPER_ADMIN', 'PRESIDENT', 'TREASURER', 'VOLUNTEER'].includes(data.user.role)) {
+        if (['SUPER_ADMIN', 'MERCHANDISE', 'TREASURER', 'VOLUNTEER'].includes(data.user.role)) {
           navigate('/admin');
         } else {
           navigate('/dashboard');

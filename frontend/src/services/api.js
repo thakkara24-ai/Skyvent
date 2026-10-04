@@ -71,15 +71,26 @@ api.interceptors.response.use(
     }
 
     // Format friendly error message
-    const errorMsg = error.response?.data?.message || 
-                     error.response?.data?.detail || 
-                     error.message || 
-                     'A network or server error occurred.';
+    let errorMsg = error.response?.data?.message || error.response?.data?.detail;
+    if (!errorMsg && error.response?.data && typeof error.response.data === 'object') {
+      const fieldEntries = Object.entries(error.response.data);
+      if (fieldEntries.length > 0) {
+        errorMsg = fieldEntries
+          .map(([k, v]) => {
+            const valStr = Array.isArray(v) ? v.join(', ') : typeof v === 'object' ? JSON.stringify(v) : v;
+            return `${k.replace(/_/g, ' ')}: ${valStr}`;
+          })
+          .join(' | ');
+      }
+    }
+    if (!errorMsg) {
+      errorMsg = error.message || 'A network or server error occurred.';
+    }
                      
     return Promise.reject({
       message: errorMsg,
       code: error.response?.data?.code || 'UNKNOWN_ERROR',
-      errors: error.response?.data?.errors,
+      errors: error.response?.data?.errors || error.response?.data,
       status: error.response?.status
     });
   }
@@ -100,6 +111,7 @@ export const authService = {
   resetPassword: (payload) => api.post('/auth/reset-password/', payload),
   getUsers: (params) => api.get('/users/', { params }),
   updateUser: (id, data) => api.patch(`/users/${id}/`, data),
+  deleteUser: (id) => api.delete(`/users/${id}/`),
 };
 
 export const membershipService = {
@@ -107,7 +119,7 @@ export const membershipService = {
   createPlan: (data) => api.post('/membership-plans/', data),
   updatePlan: (id, data) => api.patch(`/membership-plans/${id}/`, data),
   getMemberships: (params) => api.get('/memberships/', { params }),
-  purchaseMembership: (planId, paymentMethod = 'Demo Payment') => 
+  purchaseMembership: (planId, paymentMethod = 'Campus UPI Gateway') => 
     api.post('/memberships/', { plan_id: planId, payment_method: paymentMethod }),
 };
 
@@ -122,9 +134,10 @@ export const eventService = {
 export const ticketService = {
   getTickets: (params) => api.get('/tickets/', { params }),
   createTicket: (data) => api.post('/tickets/', data),
-  purchaseTicket: (eventId, paymentMethod = 'Demo Payment') => 
+  purchaseTicket: (eventId, paymentMethod = 'Campus UPI Gateway') => 
     api.post(`/events/${eventId}/tickets/`, { payment_method: paymentMethod }),
   cancelTicket: (id) => api.post(`/tickets/${id}/cancel/`),
+  downloadTicketPdf: (id) => api.get(`/tickets/${id}/download-pdf/`, { responseType: 'blob' }),
 };
 
 
@@ -158,10 +171,12 @@ export const fundraiserService = {
   getFundraisers: (params) => api.get('/fundraisers/', { params }),
   createFundraiser: (data) => api.post('/fundraisers/', data),
   updateFundraiser: (id, data) => api.patch(`/fundraisers/${id}/`, data),
+  deleteFundraiser: (id) => api.delete(`/fundraisers/${id}/`),
   getFundraiserTasks: (fundraiserId) => api.get(`/fundraisers/${fundraiserId}/tasks/`),
   createFundraiserTask: (fundraiserId, taskData) => api.post(`/fundraisers/${fundraiserId}/tasks/`, taskData),
   getAllTasks: (params) => api.get('/tasks/', { params }),
   updateTask: (taskId, data) => api.patch(`/tasks/${taskId}/`, data),
+  deleteTask: (taskId) => api.delete(`/tasks/${taskId}/`),
 };
 
 export const financeService = {

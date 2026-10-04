@@ -38,7 +38,7 @@ const EVENT_PRESET_IMAGES = [
   }
 ];
 
-export const toLocalDatetimeInput = (dateObj) => {
+const toLocalDatetimeInput = (dateObj) => {
   if (!dateObj) return '';
   const d = typeof dateObj === 'string' ? new Date(dateObj) : dateObj;
   if (isNaN(d.getTime())) return '';
@@ -51,7 +51,7 @@ export const toLocalDatetimeInput = (dateObj) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-export const toISOWithTimezone = (localDatetimeStr) => {
+const toISOWithTimezone = (localDatetimeStr) => {
   if (!localDatetimeStr) return null;
   const d = new Date(localDatetimeStr);
   if (isNaN(d.getTime())) return localDatetimeStr;
@@ -63,7 +63,6 @@ export const AdminEventFormPage = () => {
   const navigate = useNavigate();
   const isEdit = !!id;
 
-  const [loading, setLoading] = useState(isEdit);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Reasonable defaults for new events:

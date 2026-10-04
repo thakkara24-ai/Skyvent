@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Mail, Lock, LogIn, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, LogIn } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Card } from '../../components/common/Card';
@@ -13,10 +13,9 @@ import { SkyventLogo } from '../../components/common/Logo';
 export const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       email: '',
       password: '',
@@ -27,7 +26,7 @@ export const LoginPage = () => {
     setIsLoading(true);
     try {
       const user = await login(data.email, data.password);
-      if (['SUPER_ADMIN', 'PRESIDENT', 'TREASURER', 'VOLUNTEER'].includes(user.role)) {
+      if (['SUPER_ADMIN', 'MERCHANDISE', 'TREASURER', 'VOLUNTEER'].includes(user.role)) {
         navigate('/admin');
       } else {
         navigate('/dashboard');
@@ -72,7 +71,6 @@ export const LoginPage = () => {
                 }
               })}
             />
-
 
             <div>
               <div className="flex items-center justify-between mb-1">
