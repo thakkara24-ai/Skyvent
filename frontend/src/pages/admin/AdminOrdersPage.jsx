@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { orderService, extractDataArray } from '../../services/api';
-import { Package, Search, ShoppingBag } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { Skeleton } from '../../components/common/UiHelpers';

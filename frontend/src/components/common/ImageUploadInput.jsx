@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, Link as LinkIcon, Image as ImageIcon, X, Check, Sparkles, AlertCircle } from 'lucide-react';
+import { Upload, Link as LinkIcon, Image as ImageIcon, X, Check, AlertCircle } from 'lucide-react';
 import { Button } from './Button';
 
 export const ImageUploadInput = ({
@@ -30,18 +30,61 @@ export const ImageUploadInput = ({
       alert('Please select a valid image file (PNG, JPG, JPEG, WEBP, SVG).');
       return;
     }
-    // Limit to 5MB
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Image file size exceeds 5MB limit.');
+    // Limit to 10MB
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image file size exceeds 10MB limit.');
       return;
     }
 
+    // For SVG images, keep as direct DataURL
+    if (file.type === 'image/svg+xml') {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result;
+        if (dataUrl) onChange?.(dataUrl);
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    // For raster images, downscale to max 1280px and compress to keep payload compact and high quality
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target?.result;
-      if (dataUrl) {
+      if (!dataUrl) return;
+
+      const img = new Image();
+      img.onload = () => {
+        const MAX_DIM = 1280;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_DIM || height > MAX_DIM) {
+          if (width > height) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          } else {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.85);
+          onChange?.(compressed);
+        } else {
+          onChange?.(dataUrl);
+        }
+      };
+      img.onerror = () => {
         onChange?.(dataUrl);
-      }
+      };
+      img.src = dataUrl;
     };
     reader.readAsDataURL(file);
   };
@@ -233,7 +276,7 @@ export const ImageUploadInput = ({
                 {presets && presets.length > 0 && (
                   <div className="pt-2 border-t border-[#E8DCCE]/60">
                     <div className="text-[11px] font-semibold text-[#7A6A5E] uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-[#6B4A38]" /> Quick Preset Images:
+                      <ImageIcon className="w-3.5 h-3.5 text-[#6B4A38]" /> Quick Preset Images:
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {presets.map((preset, idx) => (

@@ -21,4 +21,4 @@ class TicketSerializer(serializers.ModelSerializer):
         ]
 
 class PurchaseTicketSerializer(serializers.Serializer):
-    payment_method = serializers.CharField(default="Demo Payment")
+    payment_method = serializers.CharField(default="Campus UPI Gateway")

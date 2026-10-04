@@ -45,6 +45,20 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     fetchCurrentUser();
+
+    const handleSync = () => {
+      if (localStorage.getItem('skyvent_access_token')) {
+        fetchCurrentUser();
+      }
+    };
+
+    window.addEventListener('focus', handleSync);
+    document.addEventListener('visibilitychange', handleSync);
+
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      document.removeEventListener('visibilitychange', handleSync);
+    };
   }, []);
 
   const login = async (email, password) => {
@@ -88,7 +102,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await authService.logout();
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       localStorage.removeItem('skyvent_access_token');
@@ -121,11 +135,12 @@ export const AuthProvider = ({ children }) => {
     return res.data;
   };
 
-  const isStaff = user && ['SUPER_ADMIN', 'PRESIDENT', 'TREASURER', 'VOLUNTEER'].includes(user.role);
+  const isStaff = user && ['SUPER_ADMIN', 'MERCHANDISE', 'TREASURER', 'VOLUNTEER'].includes(user.role);
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
-  const isPresident = user?.role === 'PRESIDENT' || isSuperAdmin;
+  const isMerchandise = user?.role === 'MERCHANDISE' || isSuperAdmin;
   const isTreasurer = user?.role === 'TREASURER' || isSuperAdmin;
-  const isVolunteer = user?.role === 'VOLUNTEER';
+  const isVolunteer = user?.role === 'VOLUNTEER' || isSuperAdmin;
+  const isPresident = isSuperAdmin;
 
   return (
     <AuthContext.Provider
@@ -142,9 +157,10 @@ export const AuthProvider = ({ children }) => {
         updateProfile,
         isStaff,
         isSuperAdmin,
-        isPresident,
+        isMerchandise,
         isTreasurer,
         isVolunteer,
+        isPresident,
       }}
     >
       {children}

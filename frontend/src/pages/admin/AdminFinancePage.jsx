@@ -5,15 +5,7 @@ import {
   Wallet, 
   TrendingUp, 
   TrendingDown, 
-  Plus, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
-  Search, 
-  Filter, 
-  FileText,
-  DollarSign,
-  AlertCircle
+  Plus
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';

@@ -37,7 +37,7 @@ class CreateOrderItemInputSerializer(serializers.Serializer):
 class CreateOrderSerializer(serializers.Serializer):
     items = CreateOrderItemInputSerializer(many=True)
     delivery_notes = serializers.CharField(required=False, allow_blank=True, default='')
-    payment_method = serializers.CharField(default="Demo Payment")
+    payment_method = serializers.CharField(default="Campus UPI Gateway")
 
     def validate_items(self, value):
         if not value:

@@ -6,29 +6,27 @@ import { productService, orderService, extractDataArray } from '../../services/a
 import { 
   ShoppingBag, 
   Search, 
-  Filter, 
   Package, 
   Check, 
   ArrowRight, 
-  Sparkles, 
-  AlertTriangle,
-  CreditCard,
-  QrCode,
-  Smartphone,
-  Wallet,
-  Plus,
-  Minus,
-  Trash2,
-  X,
-  Truck,
-  MapPin,
-  Phone,
-  User,
-  ShieldCheck,
-  CheckCircle2,
-  FileText
+  Store, 
+  BadgePercent,
+  QrCode, 
+  Smartphone, 
+  Wallet, 
+  Plus, 
+  Minus, 
+  Trash2, 
+  Truck, 
+  MapPin, 
+  Phone, 
+  User, 
+  ShieldCheck, 
+  CheckCircle2, 
+  Eye,
+  Zap,
+  Tag
 } from 'lucide-react';
-import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Badge } from '../../components/common/Badge';
@@ -47,12 +45,15 @@ export const MerchandiseShopPage = () => {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
 
+  // Selected size per product card: { [productId]: 'M' }
+  const [cardSizes, setCardSizes] = useState({});
+
   // Quick View / Product Details Modal
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [modalSize, setModalSize] = useState('L');
   const [modalQty, setModalQty] = useState(1);
 
-  // Cart State (stored in local state)
+  // Cart State
   const [cart, setCart] = useState([]);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
 
@@ -77,7 +78,7 @@ export const MerchandiseShopPage = () => {
   const [paymentMode, setPaymentMode] = useState('upi_qr');
   const [upiIdInput, setUpiIdInput] = useState('student@oksbi');
 
-  // Update recipient info when user loads
+  // Update recipient info when user profile loads
   useEffect(() => {
     if (user) {
       setDeliveryForm(prev => ({
@@ -96,6 +97,17 @@ export const MerchandiseShopPage = () => {
       });
       const items = extractDataArray(res);
       setProducts(items);
+
+      // Initialize default selected size for each product
+      const initialSizes = {};
+      items.forEach(p => {
+        if (Array.isArray(p.sizes) && p.sizes.length > 0) {
+          initialSizes[p.id] = p.sizes[0];
+        } else {
+          initialSizes[p.id] = 'Standard';
+        }
+      });
+      setCardSizes(prev => ({ ...initialSizes, ...prev }));
     } catch {
       toast.error('Failed to load merchandise catalog.');
     } finally {
@@ -111,7 +123,7 @@ export const MerchandiseShopPage = () => {
   }, [search, selectedCategory]);
 
   useEffect(() => {
-    const unsub = subscribe('inventory_updated', () => {
+    const unsub = subscribe?.('inventory_updated', () => {
       fetchProducts();
     });
     return unsub;
@@ -125,10 +137,18 @@ export const MerchandiseShopPage = () => {
     { id: 'COLLECTIBLES', name: 'Collectibles' },
   ];
 
+  // Helper to select size on a specific product card
+  const handleSelectCardSize = (productId, size) => {
+    setCardSizes(prev => ({
+      ...prev,
+      [productId]: size,
+    }));
+  };
+
   // Cart Helpers
   const addToCart = (product, size, qty = 1, openDrawer = true) => {
     if (product.stock_quantity <= 0) {
-      toast.error('This product is out of stock.');
+      toast.error('This product is currently out of stock.');
       return;
     }
 
@@ -176,7 +196,7 @@ export const MerchandiseShopPage = () => {
         if (item.key === key) {
           const newQty = item.quantity + delta;
           if (newQty > item.product.stock_quantity) {
-            toast.error(`Max ${item.product.stock_quantity} available.`);
+            toast.error(`Max ${item.product.stock_quantity} available in stock.`);
             return item;
           }
           return newQty > 0 ? { ...item, quantity: newQty } : null;
@@ -204,21 +224,21 @@ export const MerchandiseShopPage = () => {
 
   // Open Quick View Modal
   const handleOpenQuickView = (p) => {
-    const defaultSize = Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes[0] : 'Standard';
+    const activeSize = cardSizes[p.id] || (Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes[0] : 'Standard');
     setQuickViewProduct(p);
-    setModalSize(defaultSize);
+    setModalSize(activeSize);
     setModalQty(1);
   };
 
   // Direct Buy Now
-  const handleDirectBuyNow = (p) => {
+  const handleDirectBuyNow = (p, chosenSize) => {
     if (!isAuthenticated) {
       toast.info('Please log in to purchase campus merchandise.');
       navigate('/login');
       return;
     }
-    const defaultSize = Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes[0] : 'Standard';
-    addToCart(p, defaultSize, 1, false);
+    const sizeToUse = chosenSize || cardSizes[p.id] || (Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes[0] : 'Standard');
+    addToCart(p, sizeToUse, 1, false);
     setCheckoutStep(1);
     setCheckoutModalOpen(true);
   };
@@ -230,7 +250,7 @@ export const MerchandiseShopPage = () => {
       return;
     }
     if (cart.length === 0) {
-      toast.error('Your cart is empty.');
+      toast.error('Your shopping bag is empty.');
       return;
     }
     setCartDrawerOpen(false);
@@ -276,39 +296,42 @@ export const MerchandiseShopPage = () => {
   };
 
   return (
-    <div className="min-h-screen space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#2A1E18] via-[#6B4A38] to-[#8B6353] text-white p-8 sm:p-12 shadow-md">
-        <div className="relative z-10 max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-amber-200 text-xs font-bold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" /> Official Campus Store
+    <div className="min-h-screen space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Hero Banner with Clean Spacing and Badges */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[var(--ink-brown)] via-[var(--coffee-hover)] to-[var(--coffee-brown)] text-white py-10 px-6 sm:px-12 shadow-lg">
+        <div className="relative z-10 max-w-2xl space-y-3.5">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-[var(--sand)] text-xs font-extrabold uppercase tracking-wider">
+            <Store className="w-3.5 h-3.5" /> Official Campus Store
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-            Official University Merchandise
+          
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
+            Official Campus Merchandise
           </h1>
-          <p className="text-xs sm:text-sm text-[#E8DCCE]/90 leading-relaxed">
-            Wear your campus pride with premium student organization hoodies, varsity caps, badges, notebooks, and exclusive accessories.
+          
+          <p className="text-xs sm:text-sm text-[var(--sand)]/90 leading-relaxed max-w-xl">
+            Wear your campus pride with premium student organization hoodies, varsity caps, badges, notebooks, and exclusive collegiate accessories.
           </p>
-          <div className="pt-2 flex flex-wrap items-center gap-4 text-xs font-semibold text-[#E8DCCE]">
-            <span className="flex items-center gap-1.5 bg-black/20 px-3 py-1 rounded-lg">
+          
+          <div className="pt-2 flex flex-wrap items-center gap-3 text-xs font-semibold text-[var(--sand)]">
+            <span className="flex items-center gap-1.5 bg-black/25 px-3 py-1.5 rounded-xl border border-white/10">
               <Truck className="w-4 h-4 text-emerald-300" /> Free Campus & Hostel Delivery
             </span>
-            <span className="flex items-center gap-1.5 bg-black/20 px-3 py-1 rounded-lg">
+            <span className="flex items-center gap-1.5 bg-black/25 px-3 py-1.5 rounded-xl border border-white/10">
               <ShieldCheck className="w-4 h-4 text-amber-300" /> 10% Member Discount
             </span>
           </div>
         </div>
 
-        {/* Floating Cart Indicator */}
+        {/* Floating Cart Pill in Banner Header */}
         <div className="absolute right-6 top-6 hidden sm:block">
           <button
             onClick={() => setCartDrawerOpen(true)}
-            className="bg-white text-[#2A1E18] px-4 py-2.5 rounded-2xl shadow-lg hover:shadow-xl font-bold text-xs flex items-center gap-2.5 transition-all hover:scale-105 cursor-pointer"
+            className="bg-[var(--card-bg,white)] text-[var(--ink-brown)] px-4 py-2.5 rounded-2xl shadow-lg hover:shadow-xl font-extrabold text-xs flex items-center gap-2.5 transition-all hover:scale-105 cursor-pointer border border-[var(--sand)]"
           >
-            <ShoppingBag className="w-4 h-4 text-[#6B4A38]" />
+            <ShoppingBag className="w-4 h-4 text-[var(--coffee-brown)]" />
             <span>My Bag ({totalCartCount})</span>
             {cartTotal > 0 && (
-              <span className="bg-[#6B4A38] text-white px-2 py-0.5 rounded-full text-[11px]">
+              <span className="bg-[var(--coffee-brown)] text-white px-2 py-0.5 rounded-full text-[11px] font-bold">
                 ₹{cartTotal.toFixed(0)}
               </span>
             )}
@@ -316,18 +339,18 @@ export const MerchandiseShopPage = () => {
         </div>
       </div>
 
-      {/* Category Pills & Search */}
+      {/* Category Pills & Search Controls */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
         {/* Category Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 selectedCategory === cat.id
-                  ? 'bg-[#6B4A38] text-white shadow-xs'
-                  : 'bg-white text-[#7A6A5E] hover:text-[#2A1E18] border border-[#E8DCCE]'
+                  ? 'bg-[var(--coffee-brown)] text-white shadow-sm'
+                  : 'bg-[var(--card-bg,white)] text-[var(--warm-gray)] hover:text-[var(--ink-brown)] border border-[var(--sand)] hover:bg-[var(--cream)]'
               }`}
             >
               {cat.name}
@@ -335,22 +358,22 @@ export const MerchandiseShopPage = () => {
           ))}
         </div>
 
-        {/* Search Input & Cart Button */}
+        {/* Search Bar & Mobile Cart */}
         <div className="flex items-center gap-2.5">
           <div className="relative flex-1 md:w-64">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7A6A5E]" />
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--warm-gray)]" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search products..."
-              className="w-full pl-9 pr-4 py-2 text-xs bg-white border border-[#E8DCCE] rounded-xl focus:outline-none focus:border-[#6B4A38]"
+              className="w-full pl-9 pr-4 py-2 text-xs bg-[var(--card-bg,white)] border border-[var(--sand)] rounded-xl focus:outline-none focus:border-[var(--coffee-brown)] font-medium"
             />
           </div>
 
           <button
             onClick={() => setCartDrawerOpen(true)}
-            className="md:hidden p-2 bg-[#6B4A38] text-white rounded-xl flex items-center gap-1 text-xs font-bold shrink-0"
+            className="md:hidden p-2.5 bg-[var(--coffee-brown)] text-white rounded-xl flex items-center gap-1.5 text-xs font-bold shrink-0 shadow-sm"
           >
             <ShoppingBag className="w-4 h-4" />
             <span>({totalCartCount})</span>
@@ -361,8 +384,8 @@ export const MerchandiseShopPage = () => {
       {/* Product Grid */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-80 rounded-2xl" />
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-96 rounded-2xl" />
           ))}
         </div>
       ) : products.length === 0 ? (
@@ -385,15 +408,16 @@ export const MerchandiseShopPage = () => {
             const availableSizes = Array.isArray(product.sizes) && product.sizes.length > 0 
               ? product.sizes 
               : ['Standard'];
+            const activeSize = cardSizes[product.id] || availableSizes[0];
 
             return (
               <div
                 key={product.id}
-                className="group bg-white rounded-2xl border border-[#E8DCCE] overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
+                className="group bg-white rounded-2xl border border-[#E8DCCE] overflow-hidden hover:shadow-xl hover:border-[#6B4A38]/40 transition-all duration-300 flex flex-col justify-between"
               >
                 <div>
-                  {/* Product Thumbnail */}
-                  <div className="relative h-56 bg-[#FAF8F5] overflow-hidden flex items-center justify-center">
+                  {/* Product Thumbnail & Overlay Tags */}
+                  <div className="relative h-60 bg-[#FAF8F5] overflow-hidden flex items-center justify-center">
                     <img
                       src={product.image || 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80'}
                       alt={product.name}
@@ -404,76 +428,114 @@ export const MerchandiseShopPage = () => {
                       }}
                     />
                     
-                    {/* Badges */}
-                    <div className="absolute top-3 left-3 flex flex-col gap-1">
-                      <Badge variant="coffee" size="xs">
+                    {/* Category Frosted Tag */}
+                    <div className="absolute top-3 left-3">
+                      <span className="bg-white/95 text-[#2A1E18] backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-[#E8DCCE] shadow-xs">
                         {product.category}
-                      </Badge>
-                      {isOutOfStock && (
-                        <span className="bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-                          Out of Stock
-                        </span>
-                      )}
+                      </span>
                     </div>
 
-                    {!isOutOfStock && product.stock_quantity <= product.low_stock_threshold && (
-                      <div className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        Only {product.stock_quantity} left!
+                    {/* Stock Alert Tags */}
+                    {isOutOfStock ? (
+                      <div className="absolute top-3 right-3 bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase shadow-xs">
+                        Out of Stock
                       </div>
-                    )}
+                    ) : product.stock_quantity <= product.low_stock_threshold ? (
+                      <div className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs">
+                        Only {product.stock_quantity} left
+                      </div>
+                    ) : null}
+
+                    {/* Quick View Hover Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenQuickView(product)}
+                      className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-bold cursor-pointer"
+                    >
+                      <span className="bg-white text-[#2A1E18] px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 hover:bg-[#FAF8F5]">
+                        <Eye className="w-3.5 h-3.5" /> Quick View
+                      </span>
+                    </button>
                   </div>
 
-                  {/* Product Info */}
-                  <div className="p-4 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-sm font-bold text-[#2A1E18] line-clamp-1 group-hover:text-[#6B4A38] transition-colors">
+                  {/* Product Details */}
+                  <div className="p-4 space-y-2.5">
+                    <div>
+                      <h3 className="text-sm font-extrabold text-[#2A1E18] line-clamp-1 group-hover:text-[#6B4A38] transition-colors">
                         {product.name}
                       </h3>
+                      <p className="text-xs text-[#7A6A5E] line-clamp-2 mt-1 leading-relaxed">
+                        {product.description}
+                      </p>
                     </div>
 
-                    <p className="text-xs text-[#7A6A5E] line-clamp-2">
-                      {product.description}
-                    </p>
-
-                    {/* Sizes chips */}
-                    <div className="flex items-center gap-1 pt-1 overflow-x-auto scrollbar-none">
-                      {availableSizes.slice(0, 5).map((sz, idx) => (
-                        <span
-                          key={idx}
-                          className="px-1.5 py-0.5 bg-[#FAF8F5] border border-[#E8DCCE] text-[#7A6A5E] text-[10px] font-semibold rounded"
-                        >
-                          {sz}
-                        </span>
-                      ))}
+                    {/* Interactive Size Selector Row */}
+                    <div className="pt-1">
+                      <div className="text-[11px] font-bold text-[#7A6A5E] uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                        <span>Select Size / Variant:</span>
+                        <span className="text-[#6B4A38] font-bold">{activeSize}</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {availableSizes.map((sz) => {
+                          const isSelected = activeSize === sz;
+                          return (
+                            <button
+                              key={sz}
+                              type="button"
+                              onClick={() => handleSelectCardSize(product.id, sz)}
+                              className={`px-2.5 py-1 rounded-md text-xs font-bold border transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'bg-[#6B4A38] text-white border-[#6B4A38] shadow-xs scale-105'
+                                  : 'bg-[#FAF8F5] text-[#2A1E18] border-[#E8DCCE] hover:border-[#6B4A38] hover:bg-white'
+                              }`}
+                            >
+                              {sz}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Price & Action Buttons */}
-                <div className="p-4 pt-0 border-t border-[#E8DCCE]/60 mt-3 flex items-center justify-between">
-                  <div>
-                    <div className="text-base font-extrabold text-[#2A1E18]">
-                      ₹{price.toFixed(2)}
+                <div className="p-4 pt-2 border-t border-[#E8DCCE]/70 space-y-3">
+                  {/* Price Row */}
+                  <div className="flex items-baseline justify-between">
+                    <div>
+                      <div className="text-lg font-black text-[#2A1E18]">
+                        ₹{price.toFixed(2)}
+                      </div>
+                      <div className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                        <Tag className="w-3 h-3 text-emerald-600" /> Member: ₹{memberPrice.toFixed(0)}
+                      </div>
                     </div>
-                    <div className="text-[10px] font-bold text-emerald-700 flex items-center gap-0.5">
-                      <Sparkles className="w-2.5 h-2.5" /> Member: ₹{memberPrice.toFixed(0)}
+
+                    <div className="text-[10px] text-[#7A6A5E] font-medium">
+                      SKU: {product.sku}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  {/* 2-Action Buttons (Add to Bag + Buy Now) */}
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
-                      size="xs"
+                      size="sm"
                       variant="outline"
-                      onClick={() => handleOpenQuickView(product)}
+                      icon={ShoppingBag}
+                      onClick={() => addToCart(product, activeSize, 1, true)}
                       disabled={isOutOfStock}
+                      className="w-full text-xs font-bold py-2"
                     >
-                      View
+                      Add to Bag
                     </Button>
+                    
                     <Button
-                      size="xs"
+                      size="sm"
                       variant="primary"
-                      onClick={() => handleDirectBuyNow(product)}
+                      icon={Zap}
+                      onClick={() => handleDirectBuyNow(product, activeSize)}
                       disabled={isOutOfStock}
+                      className="w-full text-xs font-bold py-2"
                     >
                       Buy Now
                     </Button>
@@ -485,16 +547,16 @@ export const MerchandiseShopPage = () => {
         </div>
       )}
 
-      {/* Floating Cart Button for Mobile & Desktop */}
+      {/* Floating Sticky Bag Trigger Button for Quick Checkout */}
       {cart.length > 0 && !cartDrawerOpen && (
-        <div className="fixed bottom-6 right-6 z-40 animate-bounce">
+        <div className="fixed bottom-6 right-6 z-40">
           <button
             onClick={() => setCartDrawerOpen(true)}
-            className="bg-[#6B4A38] text-white px-5 py-3.5 rounded-full shadow-2xl hover:bg-[#2A1E18] transition-all flex items-center gap-3 font-extrabold text-sm cursor-pointer border-2 border-white"
+            className="bg-[#6B4A38] text-white px-5 py-3.5 rounded-full shadow-2xl hover:bg-[#2A1E18] transition-all flex items-center gap-3 font-extrabold text-sm cursor-pointer border-2 border-white hover:scale-105"
           >
-            <ShoppingBag className="w-5 h-5" />
-            <span>Checkout ({totalCartCount})</span>
-            <span className="bg-white text-[#6B4A38] px-2 py-0.5 rounded-full text-xs">
+            <ShoppingBag className="w-5 h-5 text-amber-200" />
+            <span>Review Bag ({totalCartCount})</span>
+            <span className="bg-white text-[#6B4A38] px-2 py-0.5 rounded-full text-xs font-black">
               ₹{cartTotal.toFixed(0)}
             </span>
           </button>
@@ -522,14 +584,21 @@ export const MerchandiseShopPage = () => {
 
               <div className="flex-1 space-y-2.5">
                 <Badge variant="coffee" size="xs">{quickViewProduct.category}</Badge>
-                <div className="text-xl font-black text-[#2A1E18]">
-                  ₹{parseFloat(quickViewProduct.price).toFixed(2)}
+                
+                <div>
+                  <div className="text-xl font-black text-[#2A1E18]">
+                    ₹{parseFloat(quickViewProduct.price).toFixed(2)}
+                  </div>
+                  <div className="text-xs font-bold text-emerald-700 flex items-center gap-1 mt-0.5">
+                    <Tag className="w-3 h-3" /> Campus Member Price: ₹{(parseFloat(quickViewProduct.price) * 0.9).toFixed(2)}
+                  </div>
                 </div>
+
                 <p className="text-xs text-[#7A6A5E] leading-relaxed">
                   {quickViewProduct.description}
                 </p>
 
-                {/* Size Selector */}
+                {/* Size Selector in Modal */}
                 <div>
                   <label className="block text-[11px] font-bold text-[#2A1E18] uppercase tracking-wider mb-1">
                     Select Size:
@@ -585,6 +654,7 @@ export const MerchandiseShopPage = () => {
               <Button
                 variant="outline"
                 size="sm"
+                icon={ShoppingBag}
                 onClick={() => addToCart(quickViewProduct, modalSize, modalQty, true)}
               >
                 Add to Bag
@@ -592,6 +662,7 @@ export const MerchandiseShopPage = () => {
               <Button
                 variant="primary"
                 size="sm"
+                icon={Zap}
                 onClick={() => {
                   addToCart(quickViewProduct, modalSize, modalQty, false);
                   setCheckoutStep(1);
@@ -617,7 +688,7 @@ export const MerchandiseShopPage = () => {
             <div className="py-12 text-center space-y-2">
               <ShoppingBag className="w-12 h-12 text-[#7A6A5E]/40 mx-auto" />
               <p className="text-xs font-bold text-[#2A1E18]">Your shopping bag is empty</p>
-              <p className="text-[11px] text-[#7A6A5E]">Explore our hoodies, t-shirts, and caps above!</p>
+              <p className="text-[11px] text-[#7A6A5E]">Explore our hoodies, t-shirts, caps, and notebooks above!</p>
             </div>
           ) : (
             <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
@@ -645,14 +716,14 @@ export const MerchandiseShopPage = () => {
                   <div className="flex items-center gap-1 bg-white border border-[#E8DCCE] rounded-lg p-0.5">
                     <button
                       onClick={() => updateCartQty(item.key, -1)}
-                      className="p-1 hover:bg-[#FAF8F5] rounded text-[#7A6A5E]"
+                      className="p-1 hover:bg-[#FAF8F5] rounded text-[#7A6A5E] cursor-pointer"
                     >
                       <Minus className="w-3 h-3" />
                     </button>
                     <span className="text-xs font-bold px-1.5 text-[#2A1E18]">{item.quantity}</span>
                     <button
                       onClick={() => updateCartQty(item.key, 1)}
-                      className="p-1 hover:bg-[#FAF8F5] rounded text-[#7A6A5E]"
+                      className="p-1 hover:bg-[#FAF8F5] rounded text-[#7A6A5E] cursor-pointer"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
@@ -660,7 +731,8 @@ export const MerchandiseShopPage = () => {
 
                   <button
                     onClick={() => removeFromCart(item.key)}
-                    className="p-1.5 text-[#7A6A5E] hover:text-rose-600 transition-colors"
+                    className="p-1.5 text-[#7A6A5E] hover:text-rose-600 transition-colors cursor-pointer"
+                    title="Remove item"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -679,7 +751,7 @@ export const MerchandiseShopPage = () => {
               {isMember && (
                 <div className="flex justify-between text-emerald-700 font-semibold">
                   <span className="flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" /> Campus Member Privilege (10% Off):
+                    <BadgePercent className="w-3 h-3" /> Campus Member Privilege (10% Off):
                   </span>
                   <span>-₹{memberDiscount.toFixed(2)}</span>
                 </div>
@@ -703,14 +775,14 @@ export const MerchandiseShopPage = () => {
             </Button>
             {cart.length > 0 && (
               <Button variant="primary" size="sm" onClick={handleStartCheckout} icon={ArrowRight}>
-                Proceed to Delivery & Payment
+                Proceed to Checkout
               </Button>
             )}
           </div>
         </div>
       </Modal>
 
-      {/* Full Multi-Step E-Commerce Checkout Modal */}
+      {/* Multi-Step E-Commerce Checkout Modal */}
       <Modal
         isOpen={checkoutModalOpen}
         onClose={() => setCheckoutModalOpen(false)}
@@ -726,7 +798,7 @@ export const MerchandiseShopPage = () => {
             ? "Specify campus hostel, block, or council desk pickup location"
             : checkoutStep === 2
             ? "Instant campus payment via UPI QR or UPI ID"
-            : "Your merchandise order is being packed!"
+            : "Your merchandise order is confirmed and being prepared!"
         }
         maxWidth="max-w-xl"
       >

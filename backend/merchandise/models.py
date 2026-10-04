@@ -16,7 +16,7 @@ class Product(models.Model):
     sizes = models.JSONField(default=list, blank=True, help_text="e.g. ['S', 'M', 'L', 'XL', 'XXL']")
     stock_quantity = models.PositiveIntegerField(default=0)
     low_stock_threshold = models.PositiveIntegerField(default=10)
-    image = models.CharField(max_length=500, blank=True, default='')
+    image = models.TextField(blank=True, default='')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

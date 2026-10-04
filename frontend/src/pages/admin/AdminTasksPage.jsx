@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { fundraiserService, authService, extractDataArray } from '../../services/api';
-import { KanbanSquare, Plus, CheckCircle2, Clock, AlertTriangle, ArrowRight, User, Filter } from 'lucide-react';
+import { Plus, User } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Input } from '../../components/common/Input';
 import { Modal } from '../../components/common/Modal';
 import { Skeleton } from '../../components/common/UiHelpers';
-import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 export const AdminTasksPage = () => {
@@ -62,7 +61,7 @@ export const AdminTasksPage = () => {
       });
       toast.success(`Task moved to ${newStatus.replace('_', ' ')}.`);
       fetchData();
-    } catch (err) {
+    } catch {
       toast.error('Failed to update task.');
     }
   };
@@ -99,10 +98,10 @@ export const AdminTasksPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#2A1E18] tracking-tight">
-            Volunteer Task Kanban Board
+            Team Tasks Kanban Board
           </h1>
           <p className="text-xs sm:text-sm text-[#7A6A5E] mt-1">
-            Organize campaign assignments, track volunteer progress, and monitor deadlines
+            Organize merchandise, volunteer, and treasury tasks with real-time status and deadlines
           </p>
         </div>
 
@@ -291,7 +290,7 @@ export const AdminTasksPage = () => {
                 <option value="">Unassigned</option>
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>
-                    {u.name} ({u.role})
+                    {u.name} ({u.role?.replace('_', ' ')})
                   </option>
                 ))}
               </select>

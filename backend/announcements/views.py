@@ -23,7 +23,7 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Announcement.objects.all()
 
-        if not (user.is_authenticated and (user.role in ['SUPER_ADMIN', 'PRESIDENT'] or user.is_superuser)):
+        if not (user.is_authenticated and (user.role == 'SUPER_ADMIN' or user.is_superuser)):
             queryset = queryset.filter(published=True)
             if user.is_authenticated:
                 # Filter by audience
@@ -31,6 +31,8 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
                     queryset = queryset.filter(audience__in=['ALL', 'VOLUNTEERS', 'MEMBERS'])
                 elif user.role == 'TREASURER':
                     queryset = queryset.filter(audience__in=['ALL', 'TREASURERS', 'MEMBERS'])
+                elif user.role == 'MERCHANDISE':
+                    queryset = queryset.filter(audience__in=['ALL', 'MEMBERS'])
                 elif user.role == 'MEMBER':
                     queryset = queryset.filter(audience__in=['ALL', 'MEMBERS'])
             else:
@@ -52,11 +54,11 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
         if announcement.published:
             users_query = User.objects.filter(is_active=True)
             if announcement.audience == 'MEMBERS':
-                users_query = users_query.filter(role__in=['MEMBER', 'VOLUNTEER', 'TREASURER', 'PRESIDENT', 'SUPER_ADMIN'])
+                users_query = users_query.filter(role__in=['MEMBER', 'VOLUNTEER', 'TREASURER', 'MERCHANDISE', 'SUPER_ADMIN'])
             elif announcement.audience == 'VOLUNTEERS':
-                users_query = users_query.filter(role__in=['VOLUNTEER', 'SUPER_ADMIN', 'PRESIDENT'])
+                users_query = users_query.filter(role__in=['VOLUNTEER', 'SUPER_ADMIN'])
             elif announcement.audience == 'TREASURERS':
-                users_query = users_query.filter(role__in=['TREASURER', 'SUPER_ADMIN', 'PRESIDENT'])
+                users_query = users_query.filter(role__in=['TREASURER', 'SUPER_ADMIN'])
 
             notifications = [
                 Notification(

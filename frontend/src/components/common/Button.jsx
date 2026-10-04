@@ -21,12 +21,12 @@ export const Button = ({
   };
 
   const variantStyles = {
-    primary: 'bg-[#6B4A38] text-white hover:bg-[#563B2C] focus:ring-[#6B4A38] shadow-sm',
-    secondary: 'bg-[#E8DCCE] text-[#2A1E18] hover:bg-[#ded1c2] focus:ring-[#6B4A38]',
-    outline: 'border border-[#E8DCCE] text-[#2A1E18] bg-white hover:bg-[#FAF8F5] focus:ring-[#6B4A38]',
-    clay: 'bg-[#8B6353] text-white hover:bg-[#785344] focus:ring-[#8B6353] shadow-sm',
+    primary: 'bg-[var(--coffee-brown)] text-white hover:bg-[var(--coffee-hover)] focus:ring-[var(--coffee-brown)] shadow-sm',
+    secondary: 'bg-[var(--sand)] text-[var(--ink-brown)] hover:bg-[var(--sand-light)] focus:ring-[var(--coffee-brown)]',
+    outline: 'border border-[var(--sand)] text-[var(--ink-brown)] bg-[var(--card-bg,white)] hover:bg-[var(--cream)] focus:ring-[var(--coffee-brown)]',
+    clay: 'bg-[var(--clay-brown)] text-white hover:opacity-90 focus:ring-[var(--clay-brown)] shadow-sm',
     danger: 'bg-rose-700 text-white hover:bg-rose-800 focus:ring-rose-600',
-    ghost: 'text-[#7A6A5E] hover:bg-[#FAF8F5] hover:text-[#2A1E18] focus:ring-[#6B4A38]',
+    ghost: 'text-[var(--warm-gray)] hover:bg-[var(--sand-light)] hover:text-[var(--ink-brown)] focus:ring-[var(--coffee-brown)]',
   };
 
   return (

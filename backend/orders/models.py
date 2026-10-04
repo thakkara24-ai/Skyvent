@@ -56,7 +56,9 @@ class OrderItem(models.Model):
     )
     product = models.ForeignKey(
         'merchandise.Product',
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='order_items'
     )
     product_name_snapshot = models.CharField(max_length=255)

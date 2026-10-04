@@ -247,7 +247,7 @@ class CurrentUserView(views.APIView):
                 errors=serializer.errors
             )
         # Normal users cannot change their own role or active status
-        if not (request.user.role in ['SUPER_ADMIN', 'PRESIDENT'] or request.user.is_superuser):
+        if not (request.user.role == 'SUPER_ADMIN' or request.user.is_superuser):
             serializer.validated_data.pop('role', None)
             serializer.validated_data.pop('is_active', None)
 
@@ -303,7 +303,7 @@ class UserManagementViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [IsAuthenticated()]
-        return [IsPresidentOrAdmin()]
+        return [IsSuperAdmin()]
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -331,6 +331,22 @@ class UserManagementViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         user = self.get_object()
+
+        # Super admin protection
+        if user.role == 'SUPER_ADMIN' and request.data.get('role') and request.data.get('role') != 'SUPER_ADMIN':
+            return error_response(
+                message="Super Admin role is permanent and cannot be demoted.",
+                code="SUPER_ADMIN_PROTECTED",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        if request.data.get('role') == 'SUPER_ADMIN' and user.role != 'SUPER_ADMIN':
+            return error_response(
+                message="Super Admin role cannot be assigned. Only one Super Admin account is permitted.",
+                code="CANNOT_ASSIGN_SUPER_ADMIN",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = UserUpdateSerializer(user, data=request.data, partial=True)
         if not serializer.is_valid():
             return error_response(errors=serializer.errors)
@@ -350,3 +366,37 @@ class UserManagementViewSet(viewsets.ModelViewSet):
             data=UserSerializer(updated_user).data,
             message="User updated successfully."
         )
+
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object()
+
+        # Protection checks
+        if user.role == 'SUPER_ADMIN' or user.is_superuser:
+            return error_response(
+                message="Super Admin accounts are permanent and cannot be deleted.",
+                code="CANNOT_DELETE_SUPER_ADMIN",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        if user.id == request.user.id:
+            return error_response(
+                message="You cannot delete your own account from the member directory.",
+                code="CANNOT_DELETE_SELF",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        deleted_name = user.name
+        deleted_email = user.email
+        deleted_id = user.id
+
+        user.delete()
+
+        create_audit_log(
+            request.user,
+            "USER_DELETED",
+            "User",
+            deleted_id,
+            {"name": deleted_name, "email": deleted_email}
+        )
+
+        return success_response(message=f"Member '{deleted_name}' ({deleted_email}) was successfully deleted.")

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { ticketService, extractDataArray } from '../../services/api';
-import { Ticket as TicketIcon, QrCode, Calendar, MapPin, Clock, XCircle, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Ticket as TicketIcon, QrCode, Calendar, MapPin, Download } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
@@ -20,12 +19,13 @@ export const MyTicketsPage = () => {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [ticketToCancel, setTicketToCancel] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [downloadingId, setDownloadingId] = useState(null);
 
   const fetchTickets = async () => {
     try {
       const res = await ticketService.getTickets({ status: statusFilter !== 'ALL' ? statusFilter : undefined });
       setTickets(extractDataArray(res));
-    } catch (err) {
+    } catch {
       toast.error('Could not load your tickets.');
     } finally {
       setLoading(false);
@@ -39,6 +39,27 @@ export const MyTicketsPage = () => {
   const handleOpenQR = (ticket) => {
     setSelectedTicket(ticket);
     setQrModalOpen(true);
+  };
+
+  const handleDownloadPdf = async (ticket) => {
+    setDownloadingId(ticket.id);
+    try {
+      const response = await ticketService.downloadTicketPdf(ticket.id);
+      const blob = new Blob([response.data || response], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `SKYVENT_Pass_${ticket.ticket_number || ticket.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success('Ticket PDF downloaded.');
+    } catch {
+      toast.error('Failed to download ticket PDF pass.');
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const handleOpenCancel = (ticket) => {
@@ -164,16 +185,28 @@ export const MyTicketsPage = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2.5 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   {!isCancelled && (
-                    <Button
-                      variant="primary"
-                      size="md"
-                      icon={QrCode}
-                      onClick={() => handleOpenQR(ticket)}
-                    >
-                      Show QR Pass
-                    </Button>
+                    <>
+                      <Button
+                        variant="primary"
+                        size="md"
+                        icon={QrCode}
+                        onClick={() => handleOpenQR(ticket)}
+                      >
+                        Show QR Pass
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="md"
+                        icon={Download}
+                        isLoading={downloadingId === ticket.id}
+                        onClick={() => handleDownloadPdf(ticket)}
+                        title="Download PDF Pass"
+                      >
+                        PDF
+                      </Button>
+                    </>
                   )}
 
                   {!isUsed && !isCancelled && (

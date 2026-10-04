@@ -40,7 +40,7 @@ class Payment(models.Model):
     )
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=10, default='INR')
-    provider = models.CharField(max_length=64, default='Demo Payment Provider')
+    provider = models.CharField(max_length=64, default='Campus UPI Gateway')
     reference = models.CharField(max_length=128, unique=True, db_index=True)
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default='SUCCESS')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -85,7 +85,7 @@ class Expense(models.Model):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     category = models.CharField(max_length=40, choices=TRANSACTION_CATEGORIES, default='REIMBURSEMENT')
     description = models.TextField()
-    receipt = models.CharField(max_length=500, blank=True, default='')
+    receipt = models.TextField(blank=True, default='')
     submitted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

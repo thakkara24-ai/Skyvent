@@ -60,6 +60,17 @@ const StaffRoute = ({ children }) => {
   return isStaff ? children : <Navigate to="/dashboard" replace />;
 };
 
+const RoleRoute = ({ roles, children }) => {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center text-xs text-[#7A6A5E]">Loading SKYVENT...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.is_superuser || user.role === 'SUPER_ADMIN') return children;
+  if (roles && !roles.includes(user.role)) {
+    return <Navigate to="/admin" replace />;
+  }
+  return children;
+};
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -92,22 +103,23 @@ export const AppRoutes = () => {
       {/* Admin / Staff Protected Pages */}
       <Route path="/admin" element={<StaffRoute><AdminLayout /></StaffRoute>}>
         <Route index element={<AdminDashboardPage />} />
-        <Route path="members" element={<AdminMembersPage />} />
-        <Route path="memberships" element={<AdminMembershipsPage />} />
-        <Route path="events" element={<AdminEventsPage />} />
-        <Route path="events/new" element={<AdminEventFormPage />} />
-        <Route path="events/:id/edit" element={<AdminEventFormPage />} />
-        <Route path="tickets" element={<AdminTicketsPage />} />
-        <Route path="attendance" element={<AdminAttendancePage />} />
-        <Route path="products" element={<AdminProductsPage />} />
-        <Route path="orders" element={<AdminOrdersPage />} />
-        <Route path="announcements" element={<AdminAnnouncementsPage />} />
-        <Route path="fundraisers" element={<AdminFundraisersPage />} />
-        <Route path="tasks" element={<AdminTasksPage />} />
-        <Route path="finance" element={<AdminFinancePage />} />
-        <Route path="reports" element={<AdminReportsPage />} />
-        <Route path="audit-logs" element={<AdminAuditLogsPage />} />
-        <Route path="settings" element={<AdminSettingsPage />} />
+        <Route path="members" element={<RoleRoute roles={['SUPER_ADMIN']}><AdminMembersPage /></RoleRoute>} />
+        <Route path="memberships" element={<RoleRoute roles={['SUPER_ADMIN']}><AdminMembershipsPage /></RoleRoute>} />
+        <Route path="events" element={<RoleRoute roles={['SUPER_ADMIN', 'VOLUNTEER']}><AdminEventsPage /></RoleRoute>} />
+        <Route path="events/new" element={<RoleRoute roles={['SUPER_ADMIN', 'VOLUNTEER']}><AdminEventFormPage /></RoleRoute>} />
+        <Route path="events/:id/edit" element={<RoleRoute roles={['SUPER_ADMIN', 'VOLUNTEER']}><AdminEventFormPage /></RoleRoute>} />
+        <Route path="tickets" element={<RoleRoute roles={['SUPER_ADMIN', 'VOLUNTEER']}><AdminTicketsPage /></RoleRoute>} />
+        <Route path="attendance" element={<RoleRoute roles={['SUPER_ADMIN', 'VOLUNTEER']}><AdminAttendancePage /></RoleRoute>} />
+        <Route path="products" element={<RoleRoute roles={['SUPER_ADMIN', 'MERCHANDISE']}><AdminProductsPage /></RoleRoute>} />
+        <Route path="orders" element={<RoleRoute roles={['SUPER_ADMIN', 'MERCHANDISE']}><AdminOrdersPage /></RoleRoute>} />
+        <Route path="announcements" element={<RoleRoute roles={['SUPER_ADMIN']}><AdminAnnouncementsPage /></RoleRoute>} />
+        <Route path="fundraisers" element={<RoleRoute roles={['SUPER_ADMIN', 'TREASURER']}><AdminFundraisersPage /></RoleRoute>} />
+        <Route path="tasks" element={<RoleRoute roles={['SUPER_ADMIN', 'MERCHANDISE', 'TREASURER', 'VOLUNTEER']}><AdminTasksPage /></RoleRoute>} />
+        <Route path="finance" element={<RoleRoute roles={['SUPER_ADMIN', 'TREASURER']}><AdminFinancePage /></RoleRoute>} />
+        <Route path="reports" element={<RoleRoute roles={['SUPER_ADMIN', 'TREASURER']}><AdminReportsPage /></RoleRoute>} />
+        <Route path="audit-logs" element={<RoleRoute roles={['SUPER_ADMIN']}><AdminAuditLogsPage /></RoleRoute>} />
+        <Route path="settings" element={<RoleRoute roles={['SUPER_ADMIN']}><AdminSettingsPage /></RoleRoute>} />
+        <Route path="notifications" element={<NotificationsPage />} />
       </Route>
 
       {/* Catch-all */}

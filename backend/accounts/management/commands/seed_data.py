@@ -42,13 +42,13 @@ class Command(BaseCommand):
                 "is_staff": True,
                 "is_superuser": True
             },
-            # President
+            # Merchandise Manager
             {
-                "email": "president@skyvent.demo",
-                "name": "Clara Moreau",
-                "role": "PRESIDENT",
+                "email": "merchandise@skyvent.demo",
+                "name": "Elena Rostova",
+                "role": "MERCHANDISE",
                 "student_id": "STU-2023-0104",
-                "department": "Political Science & Economics",
+                "department": "Design & Merchandising",
                 "is_staff": True
             },
             # Treasurer
@@ -165,7 +165,7 @@ class Command(BaseCommand):
             created_users[udata["email"]] = user
 
         admin_user = created_users["admin@skyvent.demo"]
-        president_user = created_users["president@skyvent.demo"]
+        merchandise_user = created_users["merchandise@skyvent.demo"]
         treasurer_user = created_users["treasurer@skyvent.demo"]
         volunteer_user = created_users["volunteer@skyvent.demo"]
         demo_member = created_users["member@skyvent.demo"]
@@ -354,7 +354,7 @@ class Command(BaseCommand):
         for edata in events_info:
             evt, _ = Event.objects.get_or_create(
                 title=edata["title"],
-                defaults={**edata, "created_by": president_user}
+                defaults={**edata, "created_by": admin_user}
             )
             created_events.append(evt)
 
@@ -469,10 +469,10 @@ class Command(BaseCommand):
                 "category": "ACCESSORIES",
                 "price": Decimal("349.00"),
                 "sku": "SKY-CAP-01",
-                "sizes": ["One Size"],
+                "sizes": ["Adjustable Strap"],
                 "stock_quantity": 28,
                 "low_stock_threshold": 8,
-                "image": "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=800&q=80"
+                "image": "https://images.unsplash.com/photo-1575428652377-a2d80e2277fc?auto=format&fit=crop&w=800&q=80"
             },
             {
                 "name": "Minimalist Hardcover Campus Journal",
@@ -480,7 +480,7 @@ class Command(BaseCommand):
                 "category": "STATIONERY",
                 "price": Decimal("249.00"),
                 "sku": "SKY-BOOK-01",
-                "sizes": ["Standard A5"],
+                "sizes": ["A5 Hardcover", "B5 Spiral"],
                 "stock_quantity": 60,
                 "low_stock_threshold": 10,
                 "image": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80"
@@ -491,7 +491,7 @@ class Command(BaseCommand):
                 "category": "ACCESSORIES",
                 "price": Decimal("599.00"),
                 "sku": "SKY-BTL-01",
-                "sizes": ["750 ml"],
+                "sizes": ["500 ml", "750 ml"],
                 "stock_quantity": 24,
                 "low_stock_threshold": 8,
                 "image": "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=800&q=80"
@@ -502,10 +502,10 @@ class Command(BaseCommand):
                 "category": "COLLECTIBLES",
                 "price": Decimal("149.00"),
                 "sku": "SKY-PIN-01",
-                "sizes": ["Standard Pack"],
+                "sizes": ["Standard Pack", "Deluxe Pack"],
                 "stock_quantity": 85,
                 "low_stock_threshold": 15,
-                "image": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=800&q=80"
+                "image": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80"
             }
         ]
 
@@ -554,7 +554,7 @@ class Command(BaseCommand):
         for adata in announcements_data:
             Announcement.objects.get_or_create(
                 title=adata["title"],
-                defaults={**adata, "created_by": president_user}
+                defaults={**adata, "created_by": admin_user}
             )
 
         # ==========================================
@@ -570,7 +570,7 @@ class Command(BaseCommand):
                 "start_date": today - timedelta(days=20),
                 "end_date": today + timedelta(days=40),
                 "status": "ACTIVE",
-                "created_by": president_user
+                "created_by": treasurer_user
             }
         )
 
@@ -583,7 +583,7 @@ class Command(BaseCommand):
                 "start_date": today - timedelta(days=15),
                 "end_date": today + timedelta(days=15),
                 "status": "ACTIVE",
-                "created_by": president_user
+                "created_by": treasurer_user
             }
         )
 
@@ -598,6 +598,16 @@ class Command(BaseCommand):
                 "priority": "HIGH",
                 "due_date": today + timedelta(days=4),
                 "progress": 65
+            },
+            {
+                "fundraiser": fr1,
+                "title": "Restock Heavyweight Hoodies & Store Inventory",
+                "description": "Review winter hoodie inventory levels and place replenishment order with embroidery vendor.",
+                "assignee": merchandise_user,
+                "status": "IN_PROGRESS",
+                "priority": "HIGH",
+                "due_date": today + timedelta(days=3),
+                "progress": 50
             },
             {
                 "fundraiser": fr1,
@@ -723,7 +733,7 @@ class Command(BaseCommand):
         )
 
         AuditLog.objects.create(
-            user=president_user,
+            user=admin_user,
             action="EVENT_PUBLISHED",
             entity="Event",
             entity_id=str(gala_event.id),
@@ -734,7 +744,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             "\nDemo Accounts Available:\n"
             "* Super Admin : admin@skyvent.demo / Skyvent@2026\n"
-            "* President   : president@skyvent.demo / Skyvent@2026\n"
+            "* Merchandise : merchandise@skyvent.demo / Skyvent@2026\n"
             "* Treasurer   : treasurer@skyvent.demo / Skyvent@2026\n"
             "* Volunteer   : volunteer@skyvent.demo / Skyvent@2026\n"
             "* Member      : member@skyvent.demo / Skyvent@2026\n"

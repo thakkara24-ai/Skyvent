@@ -6,13 +6,13 @@ from django.db.models import Q
 from .models import Product
 from .serializers import ProductSerializer
 from common.responses import success_response, error_response
-from common.permissions import ReadOnlyOrStaff
+from common.permissions import ReadOnlyOrMerchandiseAdmin
 from common.utils import create_audit_log, broadcast_ws_event
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all().order_by('-created_at')
     serializer_class = ProductSerializer
-    permission_classes = [ReadOnlyOrStaff]
+    permission_classes = [ReadOnlyOrMerchandiseAdmin]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description', 'sku', 'category']
     ordering_fields = ['price', 'stock_quantity', 'created_at']
@@ -21,7 +21,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Product.objects.all()
 
-        if not (user.is_authenticated and (user.role in ['SUPER_ADMIN', 'PRESIDENT', 'TREASURER', 'VOLUNTEER'] or user.is_superuser)):
+        if not (user.is_authenticated and (user.role in ['SUPER_ADMIN', 'MERCHANDISE'] or user.is_superuser)):
             queryset = queryset.filter(is_active=True)
 
         category = self.request.query_params.get('category')
@@ -36,7 +36,7 @@ class ProductViewSet(viewsets.ModelViewSet):
                 Q(description__icontains=search) |
                 Q(sku__icontains=search)
             )
-        if low_stock == 'true' and user.is_authenticated and (user.role in ['SUPER_ADMIN', 'PRESIDENT', 'TREASURER'] or user.is_superuser):
+        if low_stock == 'true' and user.is_authenticated and (user.role in ['SUPER_ADMIN', 'MERCHANDISE'] or user.is_superuser):
             from django.db.models import F
             queryset = queryset.filter(stock_quantity__lte=F('low_stock_threshold'))
 
@@ -75,3 +75,16 @@ class ProductViewSet(viewsets.ModelViewSet):
         create_audit_log(self.request.user, "PRODUCT_UPDATED", "Product", product.id, {"sku": product.sku, "stock": product.stock_quantity})
         broadcast_ws_event("inventory_updated", {"product_id": product.id, "stock": product.stock_quantity})
         return success_response(data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        product_id = instance.id
+        product_name = instance.name
+        sku = instance.sku
+
+        instance.delete()
+
+        create_audit_log(request.user, "PRODUCT_DELETED", "Product", product_id, {"sku": sku, "name": product_name})
+        broadcast_ws_event("inventory_updated", {"product_id": product_id, "deleted": True})
+
+        return success_response(message=f"Product '{product_name}' ({sku}) was successfully deleted.")

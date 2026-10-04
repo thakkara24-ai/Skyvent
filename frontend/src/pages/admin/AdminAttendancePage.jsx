@@ -2,22 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { eventService, attendanceService, extractDataArray } from '../../services/api';
 import { useSocket } from '../../context/SocketContext';
 import { 
-  QrCode, 
-  Search, 
   CheckCircle2, 
   XCircle, 
-  Users, 
-  Clock, 
-  Sparkles, 
   Camera, 
   CameraOff,
   Upload,
-  RotateCcw,
-  Volume2,
-  Calendar,
-  Image as ImageIcon,
-  KeyRound,
-  RefreshCw
+  KeyRound
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -514,39 +504,6 @@ export const AdminAttendancePage = () => {
                 </div>
               </form>
             )}
-
-            {/* 1-Click Test Pass Simulators */}
-            <div className="mt-5 pt-4 border-t border-[#E8DCCE] space-y-2">
-              <span className="text-[11px] font-bold text-[#7A6A5E] uppercase tracking-wider block">
-                ⚡ Rapid Test Simulations
-              </span>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="xs"
-                  variant="secondary"
-                  icon={QrCode}
-                  onClick={() => handlePerformCheckIn('SKY_QR_WS_001_seedtoken01', 'QR')}
-                >
-                  Test Pass #001
-                </Button>
-                <Button
-                  size="xs"
-                  variant="secondary"
-                  icon={QrCode}
-                  onClick={() => handlePerformCheckIn('SKY_QR_WS_002_seedtoken02', 'QR')}
-                >
-                  Test Pass #002
-                </Button>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  icon={QrCode}
-                  onClick={() => handlePerformCheckIn('SKY_QR_INVALID_TEST', 'QR')}
-                >
-                  Test Invalid Pass
-                </Button>
-              </div>
-            </div>
           </Card>
 
           {/* Validation Status Feedback Banner */}

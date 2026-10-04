@@ -31,4 +31,4 @@ class MembershipSerializer(serializers.ModelSerializer):
 
 class PurchaseMembershipSerializer(serializers.Serializer):
     plan_id = serializers.IntegerField()
-    payment_method = serializers.CharField(default="Demo Payment")
+    payment_method = serializers.CharField(default="Campus UPI Gateway")

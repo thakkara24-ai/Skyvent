@@ -13,7 +13,7 @@ from .serializers import (
     PurchaseMembershipSerializer
 )
 from common.responses import success_response, error_response
-from common.permissions import IsPresidentOrAdmin, ReadOnlyOrStaff
+from common.permissions import ReadOnlyOrAdmin
 from common.utils import create_audit_log, broadcast_ws_event
 from finance.models import Payment, Transaction
 from notifications.models import Notification
@@ -21,11 +21,11 @@ from notifications.models import Notification
 class MembershipPlanViewSet(viewsets.ModelViewSet):
     queryset = MembershipPlan.objects.all().order_by('price')
     serializer_class = MembershipPlanSerializer
-    permission_classes = [ReadOnlyOrStaff]
+    permission_classes = [ReadOnlyOrAdmin]
 
     def get_queryset(self):
         if self.request.user and self.request.user.is_authenticated and (
-            self.request.user.role in ['SUPER_ADMIN', 'PRESIDENT'] or self.request.user.is_superuser
+            self.request.user.role == 'SUPER_ADMIN' or self.request.user.is_superuser
         ):
             return MembershipPlan.objects.all().order_by('price')
         return MembershipPlan.objects.filter(is_active=True).order_by('price')
@@ -47,7 +47,7 @@ class MembershipViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role in ['SUPER_ADMIN', 'PRESIDENT'] or user.is_superuser:
+        if user.role == 'SUPER_ADMIN' or user.is_superuser:
             queryset = Membership.objects.all().select_related('user', 'plan').order_by('-created_at')
             user_id = self.request.query_params.get('user_id')
             status_filter = self.request.query_params.get('status')
@@ -83,12 +83,12 @@ class MembershipViewSet(viewsets.ModelViewSet):
         today = timezone.now().date()
         end_date = today + timedelta(days=plan.duration_days)
 
-        # Create Demo Payment Record
+        # Create Payment Record
         payment = Payment.objects.create(
             user=user,
             amount=plan.price,
             currency="INR",
-            provider="Demo Payment Provider",
+            provider="Campus UPI Gateway",
             reference=f"PAY-MEM-{uuid.uuid4().hex[:8].upper()}",
             status="SUCCESS"
         )

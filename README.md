@@ -21,7 +21,7 @@ MEMBER → MEMBERSHIP PLAN → EVENT DISCOVERY → DYNAMIC MEMBER PRICING → DE
 ## 🚀 Key Features & Connected Workflows
 
 ### 1. 🔐 Cryptographic Authentication & Real OTP
-- Custom User model with strict Role-Based Access Control (**SUPER_ADMIN**, **PRESIDENT**, **TREASURER**, **VOLUNTEER**, **MEMBER**).
+- Custom User model with strict Role-Based Access Control (**SUPER_ADMIN**, **MERCHANDISE**, **TREASURER**, **VOLUNTEER**, **MEMBER**).
 - JWT (JSON Web Tokens) access & refresh token rotation.
 - Real 6-digit cryptographic email OTP (SHA-256 hashed, 5-minute expiry, max 5 attempts, 60s cooldown). *No plaintext OTPs in responses or client state.*
 
@@ -127,9 +127,9 @@ All seeded demo accounts share the password: `Skyvent@2026`
 | Role | Email | Password | Access Scope |
 |---|---|---|---|
 | **Super Admin** | `admin@skyvent.demo` | `Skyvent@2026` | Full platform control, audit logs, system settings |
-| **President** | `president@skyvent.demo` | `Skyvent@2026` | Members, Events, Tickets, Merchandise, Announcements |
-| **Treasurer** | `treasurer@skyvent.demo` | `Skyvent@2026` | Financial ledger, Expense approvals, Reports |
-| **Volunteer** | `volunteer@skyvent.demo` | `Skyvent@2026` | Event check-in station, Task boards |
+| **Merchandise** | `merchandise@skyvent.demo` | `Skyvent@2026` | Merchandise products catalog, inventory, order fulfillment, stock alerts |
+| **Treasurer** | `treasurer@skyvent.demo` | `Skyvent@2026` | Fundraisers, Financial ledger, Expense approvals, Reports |
+| **Volunteer** | `volunteer@skyvent.demo` | `Skyvent@2026` | Events, Tickets, QR Check-in station, Task boards |
 | **Member (Active)** | `member@skyvent.demo` | `Skyvent@2026` | Tickets, Merchandise, Membership discounts |
 
 ---

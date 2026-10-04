@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { orderService, extractDataArray } from '../../services/api';
-import { ShoppingBag, Package, Clock, CheckCircle2, MapPin } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { Skeleton, EmptyState } from '../../components/common/UiHelpers';
@@ -15,7 +15,7 @@ export const MyOrdersPage = () => {
     try {
       const res = await orderService.getOrders();
       setOrders(extractDataArray(res));
-    } catch (err) {
+    } catch {
       toast.error('Could not load orders.');
     } finally {
       setLoading(false);

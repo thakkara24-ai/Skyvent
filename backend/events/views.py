@@ -7,13 +7,13 @@ from django.db.models import Q
 from .models import Event
 from .serializers import EventSerializer
 from common.responses import success_response, error_response
-from common.permissions import ReadOnlyOrStaff
+from common.permissions import ReadOnlyOrVolunteerAdmin
 from common.utils import create_audit_log, broadcast_ws_event
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all().order_by('start_datetime')
     serializer_class = EventSerializer
-    permission_classes = [ReadOnlyOrStaff]
+    permission_classes = [ReadOnlyOrVolunteerAdmin]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'description', 'venue', 'category']
     ordering_fields = ['start_datetime', 'created_at', 'capacity', 'member_price']
@@ -22,8 +22,8 @@ class EventViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Event.objects.all()
 
-        # Non-staff users only see PUBLISHED events
-        if not (user.is_authenticated and (user.role in ['SUPER_ADMIN', 'PRESIDENT', 'TREASURER', 'VOLUNTEER'] or user.is_superuser)):
+        # Non-volunteer/admin users only see PUBLISHED events
+        if not (user.is_authenticated and (user.role in ['SUPER_ADMIN', 'VOLUNTEER'] or user.is_superuser)):
             queryset = queryset.filter(status='PUBLISHED')
 
         category = self.request.query_params.get('category')
@@ -33,7 +33,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         if category and category != 'ALL':
             queryset = queryset.filter(category=category)
-        if status_param and user.is_authenticated and (user.role in ['SUPER_ADMIN', 'PRESIDENT'] or user.is_superuser):
+        if status_param and user.is_authenticated and (user.role in ['SUPER_ADMIN', 'VOLUNTEER'] or user.is_superuser):
             queryset = queryset.filter(status=status_param)
         if upcoming == 'true':
             queryset = queryset.filter(end_datetime__gte=timezone.now())

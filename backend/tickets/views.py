@@ -7,9 +7,13 @@ from rest_framework import viewsets, views, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
-from django.core.mail import send_mail, EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+import base64
+import io
+import qrcode
+from email.mime.image import MIMEImage
 
 from .models import Ticket
 from .serializers import TicketSerializer, PurchaseTicketSerializer
@@ -21,11 +25,6 @@ from common.utils import create_audit_log, broadcast_ws_event
 from common.pdf_generator import generate_ticket_pdf
 
 logger = logging.getLogger(__name__)
-
-import base64
-import io
-import qrcode
-from email.mime.image import MIMEImage
 
 def send_ticket_confirmation_email(ticket):
     """Sends rich HTML confirmation email with embedded QR code image and official PDF Ticket Pass attached."""
@@ -196,7 +195,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         # Allow Staff/Admin to issue a ticket
-        if not (request.user.role in ['SUPER_ADMIN', 'PRESIDENT', 'TREASURER', 'VOLUNTEER'] or request.user.is_superuser):
+        if not (request.user.role in ['SUPER_ADMIN', 'VOLUNTEER'] or request.user.is_superuser):
             return error_response(
                 message="Only administrators and event coordinators can issue tickets.",
                 code="FORBIDDEN",
@@ -252,7 +251,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         payment = Payment.objects.create(
             user=target_user,
             amount=price,
-            provider='DEMO_PAYMENT',
+            provider='Campus UPI Gateway',
             reference=f"PAY-ADM-{uuid.uuid4().hex[:8].upper()}",
             status='SUCCESS'
         )
@@ -315,7 +314,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role in ['SUPER_ADMIN', 'PRESIDENT', 'TREASURER', 'VOLUNTEER'] or user.is_superuser:
+        if user.role in ['SUPER_ADMIN', 'VOLUNTEER'] or user.is_superuser:
             queryset = Ticket.objects.all().select_related('event', 'user', 'payment').order_by('-purchased_at')
             event_id = self.request.query_params.get('event_id')
             status_param = self.request.query_params.get('status')
@@ -344,8 +343,8 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket = self.get_object()
         user = request.user
 
-        # Permission check: owner or admin
-        if ticket.user != user and not (user.role in ['SUPER_ADMIN', 'PRESIDENT'] or user.is_superuser):
+        # Permission check: owner or admin/volunteer
+        if ticket.user != user and not (user.role in ['SUPER_ADMIN', 'VOLUNTEER'] or user.is_superuser):
             return error_response(message="You do not have permission to cancel this ticket.", code="FORBIDDEN")
 
         if ticket.status == 'CANCELLED':
@@ -386,6 +385,20 @@ class TicketViewSet(viewsets.ModelViewSet):
             data=TicketSerializer(ticket).data,
             message="Ticket has been cancelled successfully."
         )
+
+    @action(detail=True, methods=['get'], url_path='download-pdf')
+    def download_pdf(self, request, pk=None):
+        ticket = self.get_object()
+        user = request.user
+
+        if ticket.user != user and not (user.role in ['SUPER_ADMIN', 'VOLUNTEER', 'TREASURER', 'MERCHANDISE'] or user.is_superuser):
+            return error_response(message="Permission denied to access this ticket pass.", code="FORBIDDEN")
+
+        pdf_bytes = generate_ticket_pdf(ticket)
+        from django.http import HttpResponse
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="SKYVENT_Pass_{ticket.ticket_number}.pdf"'
+        return response
 
 
 class EventTicketPurchaseView(views.APIView):
@@ -444,12 +457,12 @@ class EventTicketPurchaseView(views.APIView):
             price = event.non_member_price
             ticket_type = 'NON_MEMBER'
 
-        # Create Demo Payment Record
+        # Create Payment Record
         payment = Payment.objects.create(
             user=user,
             amount=price,
             currency="INR",
-            provider="Demo Payment Provider",
+            provider="Campus UPI Gateway",
             reference=f"PAY-EVT-{uuid.uuid4().hex[:8].upper()}",
             status="SUCCESS"
         )

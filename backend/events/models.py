@@ -32,7 +32,7 @@ class Event(models.Model):
     registration_open = models.DateTimeField()
     registration_close = models.DateTimeField()
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='PUBLISHED')
-    cover_image = models.CharField(max_length=500, blank=True, default='')
+    cover_image = models.TextField(blank=True, default='')
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

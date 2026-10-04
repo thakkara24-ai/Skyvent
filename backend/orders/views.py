@@ -21,7 +21,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role in ['SUPER_ADMIN', 'PRESIDENT', 'TREASURER'] or user.is_superuser:
+        if user.role in ['SUPER_ADMIN', 'MERCHANDISE'] or user.is_superuser:
             queryset = Order.objects.all().select_related('user', 'payment').prefetch_related('items__product').order_by('-created_at')
             status_param = self.request.query_params.get('status')
             user_id = self.request.query_params.get('user_id')
@@ -106,12 +106,12 @@ class OrderViewSet(viewsets.ModelViewSet):
                     "stock_quantity": prod.stock_quantity
                 })
 
-            # Create Demo Payment Record
+            # Create Payment Record
             payment = Payment.objects.create(
                 user=user,
                 amount=total,
                 currency="INR",
-                provider="Demo Payment Provider",
+                provider="Campus UPI Gateway",
                 reference=f"PAY-ORD-{uuid.uuid4().hex[:8].upper()}",
                 status="SUCCESS"
             )
@@ -161,7 +161,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
             # Low stock notifications for staff
             for low_prod in low_stock_alerts:
-                staff_users = User.objects.filter(role__in=['SUPER_ADMIN', 'PRESIDENT', 'TREASURER'])
+                staff_users = User.objects.filter(role__in=['SUPER_ADMIN', 'MERCHANDISE'])
                 for staff in staff_users:
                     Notification.objects.create(
                         user=staff,

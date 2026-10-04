@@ -1,18 +1,18 @@
 import React from 'react';
-import { ShieldCheck, Database, Cpu, Layers, GitBranch, KeyRound, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Database, Layers, KeyRound } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 
 export const AboutPage = () => {
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12 text-[var(--ink-brown)]">
       <div className="text-center max-w-3xl mx-auto space-y-4">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#6B4A38]/10 text-[#6B4A38] text-xs font-bold uppercase tracking-widest">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[var(--coffee-brown)]/10 text-[var(--coffee-brown)] text-xs font-bold uppercase tracking-widest">
           Platform Architecture
         </div>
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-[#2A1E18] tracking-tight">
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-[var(--ink-brown)] tracking-tight">
           About SKYVENT
         </h1>
-        <p className="text-base text-[#7A6A5E] leading-relaxed">
+        <p className="text-base text-[var(--warm-gray)] leading-relaxed">
           SKYVENT is an end-to-end student organization management platform built specifically to replace disjointed spreadsheets, paper ticket receipts, and manual payment tracking with a single unified, secure system.
         </p>
       </div>
@@ -50,7 +50,7 @@ export const AboutPage = () => {
             <h3 className="text-lg font-bold text-[#2A1E18]">Real OTP & Role Permissions</h3>
           </div>
           <p className="text-xs text-[#7A6A5E] leading-relaxed">
-            Secure 6-digit cryptographically hashed OTP verification with 5-minute expiry and attempt limiting. Granular permissions for Super Admins, Presidents, Treasurers, Volunteers, and Members.
+            Secure 6-digit cryptographically hashed OTP verification with 5-minute expiry and attempt limiting. Granular permissions for Super Admins, Merchandise Managers, Treasurers, Volunteers, and Members.
           </p>
         </Card>
 

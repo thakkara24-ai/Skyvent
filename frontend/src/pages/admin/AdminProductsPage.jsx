@@ -5,13 +5,7 @@ import {
   ShoppingBag, 
   Plus, 
   Edit2, 
-  AlertTriangle, 
-  Package, 
-  Trash2, 
-  CheckCircle2, 
-  Upload, 
-  Image as ImageIcon,
-  Sparkles
+  Trash2
 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -36,7 +30,7 @@ const PRESET_IMAGES = [
   },
   {
     name: 'Campus Cap',
-    url: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=800&q=80',
+    url: 'https://images.unsplash.com/photo-1575428652377-a2d80e2277fc?auto=format&fit=crop&w=800&q=80',
     category: 'ACCESSORIES'
   },
   {
@@ -90,7 +84,7 @@ export const AdminProductsPage = () => {
 
   useEffect(() => {
     fetchProducts();
-    const unsub = subscribe('inventory_updated', (data) => {
+    const unsub = subscribe('inventory_updated', () => {
       fetchProducts();
     });
     return unsub;
@@ -128,26 +122,6 @@ export const AdminProductsPage = () => {
       is_active: p.is_active,
     });
     setProductModalOpen(true);
-  };
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image file size must be less than 5MB.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setFormData((prev) => ({
-        ...prev,
-        image: event.target?.result || ''
-      }));
-      toast.success('Product image loaded successfully.');
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleSaveProduct = async (e) => {

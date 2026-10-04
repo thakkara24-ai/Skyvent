@@ -5,13 +5,13 @@ from rest_framework.decorators import action
 from .models import Fundraiser, FundraiserTask
 from .serializers import FundraiserSerializer, FundraiserTaskSerializer
 from common.responses import success_response, error_response
-from common.permissions import IsVolunteerOrStaff, IsPresidentOrAdmin, ReadOnlyOrStaff
+from common.permissions import IsStaffUser, ReadOnlyOrTreasurerAdmin
 from common.utils import create_audit_log, broadcast_ws_event
 
 class FundraiserViewSet(viewsets.ModelViewSet):
     queryset = Fundraiser.objects.all().order_by('-created_at')
     serializer_class = FundraiserSerializer
-    permission_classes = [ReadOnlyOrStaff]
+    permission_classes = [ReadOnlyOrTreasurerAdmin]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'description']
     ordering_fields = ['created_at', 'goal_amount', 'raised_amount', 'end_date']
@@ -19,6 +19,21 @@ class FundraiserViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         fundraiser = serializer.save(created_by=self.request.user)
         create_audit_log(self.request.user, "FUNDRAISER_CREATED", "Fundraiser", fundraiser.id, {"title": fundraiser.title})
+        broadcast_ws_event("fundraiser_updated", {"fundraiser_id": fundraiser.id, "action": "created"})
+
+    def perform_update(self, serializer):
+        fundraiser = serializer.save()
+        create_audit_log(self.request.user, "FUNDRAISER_UPDATED", "Fundraiser", fundraiser.id, {"title": fundraiser.title})
+        broadcast_ws_event("fundraiser_updated", {"fundraiser_id": fundraiser.id, "action": "updated"})
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        f_id = instance.id
+        title = instance.title
+        instance.delete()
+        create_audit_log(request.user, "FUNDRAISER_DELETED", "Fundraiser", f_id, {"title": title})
+        broadcast_ws_event("fundraiser_updated", {"fundraiser_id": f_id, "action": "deleted"})
+        return success_response(message=f"Fundraiser '{title}' was successfully deleted.")
 
     @action(detail=True, methods=['get', 'post'], url_path='tasks')
     def fundraiser_tasks(self, request, pk=None):
@@ -28,7 +43,7 @@ class FundraiserViewSet(viewsets.ModelViewSet):
             return success_response(data=FundraiserTaskSerializer(tasks, many=True).data)
         
         # POST new task
-        if not (request.user.role in ['SUPER_ADMIN', 'PRESIDENT', 'VOLUNTEER'] or request.user.is_superuser):
+        if not (request.user.role in ['SUPER_ADMIN', 'TREASURER', 'VOLUNTEER', 'MERCHANDISE'] or request.user.is_superuser):
             return error_response(message="Permission denied.", code="FORBIDDEN")
         
         data = request.data.copy()
@@ -44,7 +59,7 @@ class FundraiserViewSet(viewsets.ModelViewSet):
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = FundraiserTask.objects.all().select_related('fundraiser', 'assignee').order_by('due_date')
     serializer_class = FundraiserTaskSerializer
-    permission_classes = [IsAuthenticated, IsVolunteerOrStaff]
+    permission_classes = [IsAuthenticated, IsStaffUser]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'description']
 

@@ -59,80 +59,103 @@ class AdminDashboardView(views.APIView):
             category='MERCHANDISE'
         ).aggregate(t=Sum('amount'))['t'] or Decimal('0.00')
 
-        # 2. Dynamic "NEEDS ATTENTION" Section
+        # 2. Dynamic "NEEDS ATTENTION" Section (tailored to user's role)
         needs_attention = []
+        user_role = request.user.role if request.user else 'MEMBER'
+        is_super = request.user.is_superuser or user_role == 'SUPER_ADMIN'
 
-        # A: Memberships expiring within 7 days
-        seven_days_later = today + timedelta(days=7)
-        expiring_memberships_count = Membership.objects.filter(
-            status='ACTIVE',
-            end_date__gte=today,
-            end_date__lte=seven_days_later
-        ).count()
-        if expiring_memberships_count > 0:
-            needs_attention.append({
-                "id": "expiring_memberships",
-                "type": "warning",
-                "title": "Expiring Memberships",
-                "message": f"{expiring_memberships_count} membership(s) expire within 7 days.",
-                "action_url": "/admin/memberships",
-                "action_text": "Review Members"
-            })
+        # A: Memberships expiring within 7 days (Super Admin only)
+        if is_super:
+            seven_days_later = today + timedelta(days=7)
+            expiring_memberships_count = Membership.objects.filter(
+                status='ACTIVE',
+                end_date__gte=today,
+                end_date__lte=seven_days_later
+            ).count()
+            if expiring_memberships_count > 0:
+                needs_attention.append({
+                    "id": "expiring_memberships",
+                    "type": "warning",
+                    "title": "Expiring Memberships",
+                    "message": f"{expiring_memberships_count} membership(s) expire within 7 days.",
+                    "action_url": "/admin/memberships",
+                    "action_text": "Review Members"
+                })
 
-        # B: Events nearly full (>= 85% capacity)
-        published_events = Event.objects.filter(status='PUBLISHED', end_datetime__gte=now)
-        for evt in published_events:
-            sold = evt.tickets_sold_count
-            if evt.capacity > 0:
-                pct = int((sold / evt.capacity) * 100)
-                if pct >= 85:
-                    needs_attention.append({
-                        "id": f"event_capacity_{evt.id}",
-                        "type": "urgent" if pct >= 95 else "warning",
-                        "title": f"High Capacity: {evt.title}",
-                        "message": f"'{evt.title}' is {pct}% full ({sold}/{evt.capacity} seats reserved).",
-                        "action_url": f"/admin/events/{evt.id}",
-                        "action_text": "Manage Event"
-                    })
+        # B: Events nearly full (>= 85% capacity) (Super Admin & Volunteers)
+        if is_super or user_role == 'VOLUNTEER':
+            published_events = Event.objects.filter(status='PUBLISHED', end_datetime__gte=now)
+            for evt in published_events:
+                sold = evt.tickets_sold_count
+                if evt.capacity > 0:
+                    pct = int((sold / evt.capacity) * 100)
+                    if pct >= 85:
+                        needs_attention.append({
+                            "id": f"event_capacity_{evt.id}",
+                            "type": "urgent" if pct >= 95 else "warning",
+                            "title": f"High Capacity: {evt.title}",
+                            "message": f"'{evt.title}' is {pct}% full ({sold}/{evt.capacity} seats reserved).",
+                            "action_url": f"/admin/events/{evt.id}",
+                            "action_text": "Manage Event"
+                        })
 
-        # C: Low Stock Products (stock_quantity <= low_stock_threshold)
-        low_stock_prods = Product.objects.filter(is_active=True, stock_quantity__lte=F('low_stock_threshold'))
-        for prod in low_stock_prods[:3]:
-            needs_attention.append({
-                "id": f"low_stock_{prod.id}",
-                "type": "warning" if prod.stock_quantity > 0 else "urgent",
-                "title": f"Low Stock: {prod.name}",
-                "message": f"'{prod.name}' has only {prod.stock_quantity} unit(s) left in stock.",
-                "action_url": "/admin/products",
-                "action_text": "Restock Item"
-            })
+        # C: Low Stock Products (Super Admin & Merchandise)
+        if is_super or user_role == 'MERCHANDISE':
+            low_stock_prods = Product.objects.filter(is_active=True, stock_quantity__lte=F('low_stock_threshold'))
+            for prod in low_stock_prods[:5]:
+                needs_attention.append({
+                    "id": f"low_stock_{prod.id}",
+                    "type": "warning" if prod.stock_quantity > 0 else "urgent",
+                    "title": f"Low Stock: {prod.name}",
+                    "message": f"'{prod.name}' has only {prod.stock_quantity} unit(s) left in stock.",
+                    "action_url": "/admin/products",
+                    "action_text": "Restock Item"
+                })
+            
+            # Pending merchandise orders
+            pending_orders = Order.objects.filter(status='PENDING').count()
+            if pending_orders > 0:
+                needs_attention.append({
+                    "id": "pending_orders",
+                    "type": "info",
+                    "title": "Pending Merch Orders",
+                    "message": f"{pending_orders} merchandise order(s) waiting to be fulfilled.",
+                    "action_url": "/admin/orders",
+                    "action_text": "Fulfill Orders"
+                })
 
-        # D: Pending Reimbursements
-        pending_expenses_count = Expense.objects.filter(status='PENDING').count()
-        if pending_expenses_count > 0:
-            needs_attention.append({
-                "id": "pending_reimbursements",
-                "type": "info",
-                "title": "Pending Expense Claims",
-                "message": f"{pending_expenses_count} reimbursement claim(s) are awaiting review and approval.",
-                "action_url": "/admin/finance",
-                "action_text": "Review Claims"
-            })
+        # D: Pending Reimbursements (Super Admin & Treasurer)
+        if is_super or user_role == 'TREASURER':
+            pending_expenses_count = Expense.objects.filter(status='PENDING').count()
+            if pending_expenses_count > 0:
+                needs_attention.append({
+                    "id": "pending_reimbursements",
+                    "type": "info",
+                    "title": "Pending Expense Claims",
+                    "message": f"{pending_expenses_count} reimbursement claim(s) are awaiting review and approval.",
+                    "action_url": "/admin/finance",
+                    "action_text": "Review Claims"
+                })
 
-        # E: Overdue Fundraiser Tasks
-        overdue_tasks_count = FundraiserTask.objects.filter(
-            status__in=['TODO', 'IN_PROGRESS', 'BLOCKED'],
-            due_date__lt=today
-        ).count()
-        if overdue_tasks_count > 0:
-            needs_attention.append({
-                "id": "overdue_tasks",
-                "type": "urgent",
-                "title": "Overdue Volunteer Tasks",
-                "message": f"{overdue_tasks_count} fundraiser task(s) are past their due date.",
-                "action_url": "/admin/tasks",
-                "action_text": "View Board"
-            })
+        # E: Overdue Tasks (Tailored by role)
+        if is_super or user_role in ['TREASURER', 'VOLUNTEER', 'MERCHANDISE']:
+            overdue_tasks_query = FundraiserTask.objects.filter(
+                status__in=['TODO', 'IN_PROGRESS', 'BLOCKED'],
+                due_date__lt=today
+            )
+            if not is_super:
+                overdue_tasks_query = overdue_tasks_query.filter(assignee=request.user)
+            
+            overdue_tasks_count = overdue_tasks_query.count()
+            if overdue_tasks_count > 0:
+                needs_attention.append({
+                    "id": "overdue_tasks",
+                    "type": "urgent",
+                    "title": "Overdue Assigned Tasks",
+                    "message": f"{overdue_tasks_count} assigned task(s) are past their due date.",
+                    "action_url": "/admin/tasks",
+                    "action_text": "View Board"
+                })
 
         # 3. Revenue Breakdown by Source (Recharts)
         revenue_by_source = [

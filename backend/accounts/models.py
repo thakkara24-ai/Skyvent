@@ -8,7 +8,7 @@ from .managers import UserManager
 
 ROLE_CHOICES = (
     ('SUPER_ADMIN', 'Super Admin'),
-    ('PRESIDENT', 'President'),
+    ('MERCHANDISE', 'Merchandise Manager'),
     ('TREASURER', 'Treasurer'),
     ('VOLUNTEER', 'Volunteer'),
     ('MEMBER', 'Member'),
@@ -20,7 +20,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=30, blank=True, default='')
     student_id = models.CharField(max_length=50, blank=True, default='')
     department = models.CharField(max_length=150, blank=True, default='')
-    avatar = models.CharField(max_length=500, blank=True, default='')
+    avatar = models.TextField(blank=True, default='')
     role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='MEMBER')
     
     is_email_verified = models.BooleanField(default=False)
@@ -47,8 +47,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.role == 'SUPER_ADMIN' or self.is_superuser
 
     @property
-    def is_president(self):
-        return self.role == 'PRESIDENT'
+    def is_merchandise(self):
+        return self.role == 'MERCHANDISE'
 
     @property
     def is_treasurer(self):

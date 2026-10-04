@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { membershipService, extractDataArray } from '../../services/api';
-import { CreditCard, Plus, Edit2, Users, CheckCircle2 } from 'lucide-react';
+import { Plus, Edit2 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { Skeleton } from '../../components/common/UiHelpers';
-import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 export const AdminMembershipsPage = () => {

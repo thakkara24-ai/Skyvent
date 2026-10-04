@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../context/AuthContext';
-import { User, Mail, Phone, GraduationCap, Building2, Save, Shield } from 'lucide-react';
+import { User, Phone, GraduationCap, Building2, Save } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';

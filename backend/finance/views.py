@@ -171,7 +171,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role in ['SUPER_ADMIN', 'PRESIDENT', 'TREASURER'] or user.is_superuser:
+        if user.role in ['SUPER_ADMIN', 'TREASURER'] or user.is_superuser:
             queryset = Expense.objects.all().select_related('submitted_by', 'approved_by')
             status_param = self.request.query_params.get('status')
             if status_param:
@@ -191,7 +191,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         })
 
         # Notify Treasurers of pending expense
-        treasurers = User.objects.filter(role__in=['TREASURER', 'PRESIDENT', 'SUPER_ADMIN'])
+        treasurers = User.objects.filter(role__in=['TREASURER', 'SUPER_ADMIN'])
         for staff in treasurers:
             Notification.objects.create(
                 user=staff,
@@ -216,7 +216,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='review')
     def review_expense(self, request, pk=None):
-        if not (request.user.role in ['SUPER_ADMIN', 'PRESIDENT', 'TREASURER'] or request.user.is_superuser):
+        if not (request.user.role in ['SUPER_ADMIN', 'TREASURER'] or request.user.is_superuser):
             return error_response(message="Only Treasurers and Administrators can approve expenses.", code="FORBIDDEN", status_code=status.HTTP_403_FORBIDDEN)
 
         expense = self.get_object()

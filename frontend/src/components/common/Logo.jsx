@@ -12,39 +12,39 @@ export const SkyventLogo = ({ size = 36, className = "", withText = false, light
         className="shrink-0 transition-transform duration-300 group-hover:scale-105 drop-shadow-xs"
       >
         <defs>
-          {/* Main S Ribbon Gradient - Coffee Brown to Clay Brown */}
+          {/* Main S Ribbon Gradient - Dynamic theme CSS variables */}
           <linearGradient id="skyventRibbonGrad" x1="50" y1="50" x2="450" y2="450" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#8B6353" />
-            <stop offset="45%" stopColor="#6B4A38" />
-            <stop offset="100%" stopColor="#43281C" />
+            <stop offset="0%" stopColor="var(--clay-brown)" />
+            <stop offset="50%" stopColor="var(--coffee-brown)" />
+            <stop offset="100%" stopColor="var(--coffee-hover)" />
           </linearGradient>
 
           {/* S Upper Curve Gradient */}
           <linearGradient id="skyventTopLoop" x1="120" y1="80" x2="380" y2="280" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#A07260" />
-            <stop offset="50%" stopColor="#6B4A38" />
-            <stop offset="100%" stopColor="#2A1E18" />
+            <stop offset="0%" stopColor="var(--clay-brown)" />
+            <stop offset="50%" stopColor="var(--coffee-brown)" />
+            <stop offset="100%" stopColor="var(--ink-brown)" />
           </linearGradient>
 
           {/* S Bottom Loop Gradient */}
           <linearGradient id="skyventBottomLoop" x1="120" y1="260" x2="420" y2="460" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#6B4A38" />
-            <stop offset="60%" stopColor="#563B2C" />
-            <stop offset="100%" stopColor="#2A1E18" />
+            <stop offset="0%" stopColor="var(--coffee-brown)" />
+            <stop offset="60%" stopColor="var(--coffee-hover)" />
+            <stop offset="100%" stopColor="var(--ink-brown)" />
           </linearGradient>
 
           {/* Arrow / Airplane Gradient */}
           <linearGradient id="skyventArrowGrad" x1="360" y1="180" x2="480" y2="60" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#8B6353" />
-            <stop offset="50%" stopColor="#6B4A38" />
-            <stop offset="100%" stopColor="#3E2419" />
+            <stop offset="0%" stopColor="var(--clay-brown)" />
+            <stop offset="50%" stopColor="var(--coffee-brown)" />
+            <stop offset="100%" stopColor="var(--coffee-hover)" />
           </linearGradient>
 
           {/* Orbit Loop Gradient */}
           <linearGradient id="skyventOrbitGrad" x1="50" y1="360" x2="440" y2="120" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#A07260" />
-            <stop offset="50%" stopColor="#6B4A38" />
-            <stop offset="100%" stopColor="#43281C" />
+            <stop offset="0%" stopColor="var(--clay-brown)" />
+            <stop offset="50%" stopColor="var(--coffee-brown)" />
+            <stop offset="100%" stopColor="var(--ink-brown)" />
           </linearGradient>
         </defs>
 
@@ -95,25 +95,25 @@ export const SkyventLogo = ({ size = 36, className = "", withText = false, light
           />
           <polygon
             points="75,0 35,45 25,85"
-            fill="#2A1E18"
+            fill="var(--ink-brown)"
           />
           <polygon
             points="75,0 25,85 50,45"
-            fill="#6B4A38"
+            fill="var(--coffee-brown)"
           />
           <polygon
             points="75,0 50,45 85,55"
-            fill="#8B6353"
+            fill="var(--clay-brown)"
           />
         </g>
       </svg>
 
       {withText && (
         <div className="flex flex-col">
-          <span className={`text-xl font-extrabold tracking-tight leading-none ${light ? 'text-[#FAF8F5]' : 'text-[#2A1E18]'}`}>
+          <span className={`text-xl font-extrabold tracking-tight leading-none transition-colors duration-200 ${light ? 'text-white' : 'text-[var(--ink-brown)]'}`}>
             SKYVENT
           </span>
-          <span className={`text-[10px] font-semibold tracking-widest uppercase mt-0.5 ${light ? 'text-[#E8DCCE]' : 'text-[#7A6A5E]'}`}>
+          <span className={`text-[10px] font-bold tracking-widest uppercase mt-0.5 transition-colors duration-200 ${light ? 'text-[var(--sand)]' : 'text-[var(--coffee-brown)]'}`}>
             Student Org Hub
           </span>
         </div>

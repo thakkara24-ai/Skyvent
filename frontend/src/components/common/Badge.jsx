@@ -14,18 +14,19 @@ export const Badge = ({
   };
 
   const variantStyles = {
-    default: 'bg-[#FAF8F5] text-[#7A6A5E] border border-[#E8DCCE]',
-    coffee: 'bg-[#6B4A38]/10 text-[#6B4A38] border border-[#6B4A38]/20',
-    clay: 'bg-[#8B6353]/10 text-[#8B6353] border border-[#8B6353]/25',
+    default: 'bg-[var(--cream)] text-[var(--warm-gray)] border border-[var(--sand)]',
+    coffee: 'bg-[var(--coffee-brown)]/10 text-[var(--coffee-brown)] border border-[var(--coffee-brown)]/20',
+    clay: 'bg-[var(--clay-brown)]/10 text-[var(--clay-brown)] border border-[var(--clay-brown)]/25',
     success: 'bg-emerald-50 text-emerald-800 border border-emerald-200',
     warning: 'bg-amber-50 text-amber-800 border border-amber-200',
     danger: 'bg-rose-50 text-rose-800 border border-rose-200',
     info: 'bg-sky-50 text-sky-800 border border-sky-200',
-    outline: 'bg-transparent text-[#2A1E18] border border-[#E8DCCE]',
+    outline: 'bg-transparent text-[var(--ink-brown)] border border-[var(--sand)]',
+    secondary: 'bg-[var(--sand)]/50 text-[var(--ink-brown)] border border-[var(--sand)]',
   };
 
   return (
-    <span className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}>
+    <span className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant] || variantStyles.default} ${className}`}>
       {children}
     </span>
   );

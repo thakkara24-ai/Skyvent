@@ -18,8 +18,8 @@ export const Card = ({
   return (
     <div
       onClick={onClick}
-      className={`bg-white border border-[#E8DCCE]/80 rounded-xl shadow-xs transition-all duration-200 ${
-        hoverable ? 'hover:border-[#8B6353]/60 hover:shadow-md cursor-pointer' : ''
+      className={`bg-[var(--card-bg,#FFFFFF)] border border-[var(--sand)]/80 rounded-xl shadow-xs transition-all duration-200 ${
+        hoverable ? 'hover:border-[var(--clay-brown)]/60 hover:shadow-md cursor-pointer' : ''
       } ${paddingStyles[padding]} ${className}`}
       {...props}
     >

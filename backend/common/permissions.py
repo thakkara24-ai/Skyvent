@@ -8,12 +8,12 @@ class IsSuperAdmin(permissions.BasePermission):
             (request.user.role == 'SUPER_ADMIN' or request.user.is_superuser)
         )
 
-class IsPresidentOrAdmin(permissions.BasePermission):
+class IsMerchandiseOrAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         return bool(
             request.user and 
             request.user.is_authenticated and 
-            (request.user.role in ['SUPER_ADMIN', 'PRESIDENT'] or request.user.is_superuser)
+            (request.user.role in ['SUPER_ADMIN', 'MERCHANDISE'] or request.user.is_superuser)
         )
 
 class IsTreasurerOrAdmin(permissions.BasePermission):
@@ -21,7 +21,15 @@ class IsTreasurerOrAdmin(permissions.BasePermission):
         return bool(
             request.user and 
             request.user.is_authenticated and 
-            (request.user.role in ['SUPER_ADMIN', 'PRESIDENT', 'TREASURER'] or request.user.is_superuser)
+            (request.user.role in ['SUPER_ADMIN', 'TREASURER'] or request.user.is_superuser)
+        )
+
+class IsVolunteerOrAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return bool(
+            request.user and 
+            request.user.is_authenticated and 
+            (request.user.role in ['SUPER_ADMIN', 'VOLUNTEER'] or request.user.is_superuser)
         )
 
 class IsVolunteerOrStaff(permissions.BasePermission):
@@ -29,7 +37,7 @@ class IsVolunteerOrStaff(permissions.BasePermission):
         return bool(
             request.user and 
             request.user.is_authenticated and 
-            (request.user.role in ['SUPER_ADMIN', 'PRESIDENT', 'TREASURER', 'VOLUNTEER'] or request.user.is_superuser)
+            (request.user.role in ['SUPER_ADMIN', 'VOLUNTEER'] or request.user.is_superuser)
         )
 
 class IsStaffUser(permissions.BasePermission):
@@ -37,7 +45,37 @@ class IsStaffUser(permissions.BasePermission):
         return bool(
             request.user and 
             request.user.is_authenticated and 
-            (request.user.role in ['SUPER_ADMIN', 'PRESIDENT', 'TREASURER', 'VOLUNTEER'] or request.user.is_staff or request.user.is_superuser)
+            (request.user.role in ['SUPER_ADMIN', 'MERCHANDISE', 'TREASURER', 'VOLUNTEER'] or request.user.is_staff or request.user.is_superuser)
+        )
+
+class ReadOnlyOrMerchandiseAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return bool(
+            request.user and 
+            request.user.is_authenticated and 
+            (request.user.role in ['SUPER_ADMIN', 'MERCHANDISE'] or request.user.is_superuser)
+        )
+
+class ReadOnlyOrTreasurerAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return bool(
+            request.user and 
+            request.user.is_authenticated and 
+            (request.user.role in ['SUPER_ADMIN', 'TREASURER'] or request.user.is_superuser)
+        )
+
+class ReadOnlyOrVolunteerAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return bool(
+            request.user and 
+            request.user.is_authenticated and 
+            (request.user.role in ['SUPER_ADMIN', 'VOLUNTEER'] or request.user.is_superuser)
         )
 
 class ReadOnlyOrStaff(permissions.BasePermission):
@@ -47,7 +85,7 @@ class ReadOnlyOrStaff(permissions.BasePermission):
         return bool(
             request.user and 
             request.user.is_authenticated and 
-            (request.user.role in ['SUPER_ADMIN', 'PRESIDENT'] or request.user.is_superuser)
+            (request.user.role in ['SUPER_ADMIN', 'MERCHANDISE', 'TREASURER', 'VOLUNTEER'] or request.user.is_superuser)
         )
 
 class ReadOnlyOrAdmin(permissions.BasePermission):
@@ -57,5 +95,9 @@ class ReadOnlyOrAdmin(permissions.BasePermission):
         return bool(
             request.user and 
             request.user.is_authenticated and 
-            (request.user.role in ['SUPER_ADMIN', 'PRESIDENT'] or request.user.is_superuser)
+            (request.user.role == 'SUPER_ADMIN' or request.user.is_superuser)
         )
+
+# Backward-compatibility alias
+IsPresidentOrAdmin = IsSuperAdmin
+

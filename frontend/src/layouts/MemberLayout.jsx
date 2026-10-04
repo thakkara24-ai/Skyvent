@@ -11,7 +11,6 @@ import {
   ShoppingBag, 
   Package,
   Bell, 
-
   User as UserIcon, 
   LogOut, 
   ShieldAlert,
@@ -22,7 +21,7 @@ import {
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
 import { SkyventLogo } from '../components/common/Logo';
-
+import { ThemeSwitcher } from '../components/common/ThemeSwitcher';
 
 export const MemberLayout = () => {
   const { user, logout, isStaff } = useAuth();
@@ -60,17 +59,16 @@ export const MemberLayout = () => {
     { name: 'My Orders', path: '/my-orders', icon: Package },
   ];
 
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-[#2A1E18]">
+    <div className="min-h-screen flex flex-col bg-[var(--cream)] text-[var(--ink-brown)] transition-colors duration-200">
       {/* Member Navbar */}
-      <header className="sticky top-0 z-40 bg-white border-b border-[#E8DCCE]">
+      <header className="sticky top-0 z-40 bg-[var(--card-bg,white)] border-b border-[var(--sand)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Brand & Mobile Toggle */}
           <div className="flex items-center gap-4">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-1.5 rounded-lg text-[#7A6A5E] hover:bg-[#FAF8F5]"
+              className="md:hidden p-1.5 rounded-lg text-[var(--warm-gray)] hover:bg-[var(--cream)]"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -78,7 +76,6 @@ export const MemberLayout = () => {
             <Link to="/dashboard" className="flex items-center gap-2.5">
               <SkyventLogo size={32} withText={true} />
             </Link>
-
           </div>
 
           {/* Desktop Nav */}
@@ -92,8 +89,8 @@ export const MemberLayout = () => {
                   to={item.path}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
                     isActive
-                      ? 'bg-[#6B4A38]/10 text-[#6B4A38]'
-                      : 'text-[#7A6A5E] hover:text-[#2A1E18] hover:bg-[#FAF8F5]'
+                      ? 'bg-[var(--coffee-brown)]/10 text-[var(--coffee-brown)]'
+                      : 'text-[var(--warm-gray)] hover:text-[var(--ink-brown)] hover:bg-[var(--cream)]'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -104,22 +101,23 @@ export const MemberLayout = () => {
           </nav>
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {isStaff && (
               <Button
                 size="sm"
                 variant="clay"
-                className="hidden sm:inline-flex text-xs py-1.5"
+                icon={ShieldAlert}
+                className="hidden sm:inline-flex text-xs py-1.5 font-bold shadow-xs"
                 onClick={() => navigate('/admin')}
               >
-                Admin Panel
+                {user?.role === 'TREASURER' ? 'Treasurer Console' : user?.role === 'MERCHANDISE' ? 'Merchandise Console' : user?.role === 'VOLUNTEER' ? 'Volunteer Station' : 'Admin Console'}
               </Button>
             )}
 
             {/* Notification Bell */}
             <Link
               to="/notifications"
-              className="relative p-2 rounded-lg text-[#7A6A5E] hover:text-[#2A1E18] hover:bg-[#FAF8F5] transition-colors"
+              className="relative p-2 rounded-lg text-[var(--warm-gray)] hover:text-[var(--ink-brown)] hover:bg-[var(--cream)] transition-colors"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
@@ -127,62 +125,75 @@ export const MemberLayout = () => {
               )}
             </Link>
 
+            {/* Theme Switcher with Gear Icon */}
+            <ThemeSwitcher />
+
             {/* User Profile Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-lg hover:bg-[#FAF8F5] border border-transparent hover:border-[#E8DCCE] transition-colors cursor-pointer"
+                className="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-lg hover:bg-[var(--cream)] border border-transparent hover:border-[var(--sand)] transition-colors cursor-pointer"
               >
-                <div className="w-7 h-7 rounded-full bg-[#6B4A38] text-white flex items-center justify-center font-bold text-xs">
+                <div className="w-7 h-7 rounded-full bg-[var(--coffee-brown)] text-white flex items-center justify-center font-bold text-xs">
                   {user?.name ? user.name[0].toUpperCase() : 'U'}
                 </div>
-                <span className="hidden sm:block text-xs font-semibold text-[#2A1E18] max-w-[100px] truncate">
+                <span className="hidden sm:block text-xs font-semibold text-[var(--ink-brown)] max-w-[100px] truncate">
                   {user?.name || 'Account'}
                 </span>
-                <ChevronDown className="w-3.5 h-3.5 text-[#7A6A5E]" />
+                <ChevronDown className="w-3.5 h-3.5 text-[var(--warm-gray)]" />
               </button>
 
               {userDropdownOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setUserDropdownOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-56 bg-white border border-[#E8DCCE] rounded-xl shadow-lg z-50 py-2 divide-y divide-[#E8DCCE]/60 animate-in fade-in zoom-in-95 duration-150">
-                    <div className="px-4 py-2">
-                      <p className="text-xs font-bold text-[#2A1E18] truncate">{user?.name}</p>
-                      <p className="text-[11px] text-[#7A6A5E] truncate">{user?.email}</p>
-                      <div className="mt-1.5">
+                  <div className="absolute right-0 mt-2 w-60 bg-[var(--card-bg,white)] border border-[var(--sand)] rounded-xl shadow-lg z-50 py-2 divide-y divide-[var(--sand)]/60 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-4 py-2.5">
+                      <p className="text-xs font-bold text-[var(--ink-brown)] truncate">{user?.name}</p>
+                      <p className="text-[11px] text-[var(--warm-gray)] truncate">{user?.email}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-1">
                         <Badge variant="coffee" size="sm">
-                          {user?.role?.replace('_', ' ')}
+                          Member
                         </Badge>
+                        {user?.role && user.role !== 'MEMBER' && (
+                          <Badge
+                            variant={user.role === 'SUPER_ADMIN' ? 'danger' : user.role === 'TREASURER' ? 'clay' : user.role === 'MERCHANDISE' ? 'default' : 'secondary'}
+                            size="sm"
+                          >
+                            {user.role === 'SUPER_ADMIN' ? 'Super Admin' : user.role === 'TREASURER' ? 'Treasurer' : user.role === 'MERCHANDISE' ? 'Merch Manager' : 'Volunteer'}
+                          </Badge>
+                        )}
                       </div>
                     </div>
 
                     <div className="py-1">
+                      {isStaff && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--coffee-brown)] font-bold bg-[var(--cream)] hover:bg-[var(--sand)]/40 transition-colors"
+                        >
+                          <ShieldAlert className="w-4 h-4 text-[var(--coffee-brown)]" />
+                          <span>
+                            {user?.role === 'TREASURER' ? 'Treasurer Console' : user?.role === 'MERCHANDISE' ? 'Merch Console' : user?.role === 'VOLUNTEER' ? 'Volunteer Station' : 'Admin Console'}
+                          </span>
+                        </Link>
+                      )}
                       <Link
                         to="/profile"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-xs text-[#2A1E18] hover:bg-[#FAF8F5]"
+                        className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--ink-brown)] hover:bg-[var(--cream)]"
                       >
-                        <UserIcon className="w-4 h-4 text-[#7A6A5E]" />
+                        <UserIcon className="w-4 h-4 text-[var(--warm-gray)]" />
                         <span>Profile & Settings</span>
                       </Link>
                       <Link
                         to="/membership"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-xs text-[#2A1E18] hover:bg-[#FAF8F5]"
+                        className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--ink-brown)] hover:bg-[var(--cream)]"
                       >
-                        <CreditCard className="w-4 h-4 text-[#7A6A5E]" />
+                        <CreditCard className="w-4 h-4 text-[var(--warm-gray)]" />
                         <span>Membership Pass</span>
                       </Link>
-                      {isStaff && (
-                        <Link
-                          to="/admin"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-xs text-[#8B6353] font-semibold hover:bg-[#FAF8F5]"
-                        >
-                          <ShieldAlert className="w-4 h-4 text-[#8B6353]" />
-                          <span>Admin Console</span>
-                        </Link>
-                      )}
                     </div>
 
                     <div className="py-1">
@@ -207,7 +218,7 @@ export const MemberLayout = () => {
 
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-[#E8DCCE] px-4 py-3 space-y-1 bg-[#FAF8F5]">
+          <div className="md:hidden border-t border-[var(--sand)] px-4 py-3 space-y-1 bg-[var(--cream)]">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -217,7 +228,7 @@ export const MemberLayout = () => {
                   to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold ${
-                    isActive ? 'bg-[#6B4A38] text-white' : 'text-[#2A1E18] hover:bg-white'
+                    isActive ? 'bg-[var(--coffee-brown)] text-white' : 'text-[var(--ink-brown)] hover:bg-white'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -229,7 +240,7 @@ export const MemberLayout = () => {
               <Link
                 to="/admin"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold bg-[#8B6353] text-white mt-2"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold bg-[var(--clay-brown)] text-white mt-2"
               >
                 <ShieldAlert className="w-4 h-4" />
                 <span>Switch to Admin Panel</span>

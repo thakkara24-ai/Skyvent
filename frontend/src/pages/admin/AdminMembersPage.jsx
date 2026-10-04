@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { authService, extractDataArray } from '../../services/api';
-import { Users, Search, Filter, Shield, Edit2, CheckCircle2 } from 'lucide-react';
+import { Search, Edit2, Trash2, AlertTriangle } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
-import { Skeleton, EmptyState } from '../../components/common/UiHelpers';
-import { format } from 'date-fns';
+import { Skeleton } from '../../components/common/UiHelpers';
 import { toast } from 'sonner';
 
 export const AdminMembersPage = () => {
@@ -14,9 +13,17 @@ export const AdminMembersPage = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+  
+  // Edit Role state
   const [editUserModal, setEditUserModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [newRole, setNewRole] = useState('MEMBER');
+  const [isSavingRole, setIsSavingRole] = useState(false);
+
+  // Delete Member state
+  const [deleteUserModal, setDeleteUserModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchUsers = async () => {
     try {
@@ -29,7 +36,6 @@ export const AdminMembersPage = () => {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -46,6 +52,7 @@ export const AdminMembersPage = () => {
 
   const handleSaveRole = async () => {
     if (!selectedUser) return;
+    setIsSavingRole(true);
     try {
       await authService.updateUser(selectedUser.id, { role: newRole });
       toast.success(`Role updated for ${selectedUser.name}.`);
@@ -53,6 +60,29 @@ export const AdminMembersPage = () => {
       fetchUsers();
     } catch (err) {
       toast.error(err.message || 'Failed to update role.');
+    } finally {
+      setIsSavingRole(false);
+    }
+  };
+
+  const handleOpenDelete = (u) => {
+    setUserToDelete(u);
+    setDeleteUserModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+    setIsDeleting(true);
+    try {
+      await authService.deleteUser(userToDelete.id);
+      toast.success(`Member "${userToDelete.name}" was successfully deleted.`);
+      setDeleteUserModal(false);
+      setUserToDelete(null);
+      fetchUsers();
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete member.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -64,7 +94,7 @@ export const AdminMembersPage = () => {
             Student Member Directory
           </h1>
           <p className="text-xs sm:text-sm text-[#7A6A5E] mt-1">
-            Manage student registrations, departments, and administrative roles
+            Manage student registrations, departments, roles, and memberships
           </p>
         </div>
       </div>
@@ -90,8 +120,8 @@ export const AdminMembersPage = () => {
           <option value="">All Roles</option>
           <option value="MEMBER">Member</option>
           <option value="VOLUNTEER">Volunteer</option>
+          <option value="MERCHANDISE">Merchandise Manager</option>
           <option value="TREASURER">Treasurer</option>
-          <option value="PRESIDENT">President</option>
           <option value="SUPER_ADMIN">Super Admin</option>
         </select>
       </div>
@@ -118,7 +148,7 @@ export const AdminMembersPage = () => {
                   <th className="py-3 px-4">Department</th>
                   <th className="py-3 px-4">Role</th>
                   <th className="py-3 px-4">Membership</th>
-                  <th className="py-3 px-4 text-right">Action</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E8DCCE]/60">
@@ -131,7 +161,7 @@ export const AdminMembersPage = () => {
                     <td className="py-3 px-4 font-mono text-[#2A1E18]">{u.student_id || '—'}</td>
                     <td className="py-3 px-4 text-[#7A6A5E]">{u.department || 'General'}</td>
                     <td className="py-3 px-4">
-                      <Badge variant={u.role === 'SUPER_ADMIN' ? 'danger' : u.role === 'PRESIDENT' ? 'coffee' : u.role === 'TREASURER' ? 'clay' : u.role === 'VOLUNTEER' ? 'info' : 'default'} size="sm">
+                      <Badge variant={u.role === 'SUPER_ADMIN' ? 'danger' : u.role === 'MERCHANDISE' ? 'coffee' : u.role === 'TREASURER' ? 'clay' : u.role === 'VOLUNTEER' ? 'info' : 'default'} size="sm">
                         {u.role?.replace('_', ' ')}
                       </Badge>
                     </td>
@@ -143,14 +173,33 @@ export const AdminMembersPage = () => {
                       )}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        icon={Edit2}
-                        onClick={() => handleOpenEdit(u)}
-                      >
-                        Edit Role
-                      </Button>
+                      {u.role === 'SUPER_ADMIN' ? (
+                        <span className="text-[11px] font-semibold text-[#7A6A5E] italic">
+                          Permanent Admin
+                        </span>
+                      ) : (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            icon={Edit2}
+                            onClick={() => handleOpenEdit(u)}
+                            title="Edit user role"
+                          >
+                            Edit Role
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            className="bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800 border border-rose-200"
+                            icon={Trash2}
+                            onClick={() => handleOpenDelete(u)}
+                            title="Delete member"
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -180,9 +229,8 @@ export const AdminMembersPage = () => {
             >
               <option value="MEMBER">Member (Standard Access)</option>
               <option value="VOLUNTEER">Volunteer (Event Check-In & Tasks)</option>
-              <option value="TREASURER">Treasurer (Finance & Claims Approval)</option>
-              <option value="PRESIDENT">President (Events, Members, Tasks)</option>
-              <option value="SUPER_ADMIN">Super Admin (Full System Access)</option>
+              <option value="MERCHANDISE">Merchandise Manager (Products & Orders)</option>
+              <option value="TREASURER">Treasurer (Finance, Fundraisers & Reports)</option>
             </select>
           </div>
 
@@ -190,8 +238,71 @@ export const AdminMembersPage = () => {
             <Button variant="ghost" size="sm" onClick={() => setEditUserModal(false)}>
               Cancel
             </Button>
-            <Button variant="primary" size="sm" onClick={handleSaveRole}>
+            <Button variant="primary" size="sm" isLoading={isSavingRole} onClick={handleSaveRole}>
               Save Role
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Member Confirmation Modal */}
+      <Modal
+        isOpen={deleteUserModal}
+        onClose={() => !isDeleting && setDeleteUserModal(false)}
+        title="Delete Member Account"
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 text-xs">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-rose-900">Are you sure you want to delete this member?</p>
+              <p className="mt-1 text-rose-700 leading-relaxed">
+                This action is permanent and cannot be undone. All tickets, orders, and membership passes associated with this user will also be removed.
+              </p>
+            </div>
+          </div>
+
+          {userToDelete && (
+            <div className="bg-[#FAF8F5] border border-[#E8DCCE] rounded-lg p-3 space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-[#7A6A5E]">Name:</span>
+                <span className="font-bold text-[#2A1E18]">{userToDelete.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#7A6A5E]">Email:</span>
+                <span className="font-mono text-[#2A1E18]">{userToDelete.email}</span>
+              </div>
+              {userToDelete.student_id && (
+                <div className="flex justify-between">
+                  <span className="text-[#7A6A5E]">Student ID:</span>
+                  <span className="font-mono text-[#2A1E18]">{userToDelete.student_id}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-[#7A6A5E]">Role:</span>
+                <span className="font-semibold text-[#6B4A38]">{userToDelete.role}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-[#E8DCCE]">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isDeleting}
+              onClick={() => setDeleteUserModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              icon={Trash2}
+              isLoading={isDeleting}
+              onClick={handleConfirmDelete}
+            >
+              Delete Member
             </Button>
           </div>
         </div>
